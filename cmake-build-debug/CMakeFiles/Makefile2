@@ -81,12 +81,12 @@ clean: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/clean
 CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" --progress-num=1,2 "Built target FAV_PC_SP_23_24_BinaryDataInImg"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" --progress-num=1,2,3,4,5,6,7 "Built target FAV_PC_SP_23_24_BinaryDataInImg"
 .PHONY : CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" 2
+	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" 7
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" 0
 .PHONY : CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/rule

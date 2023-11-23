@@ -69,31 +69,111 @@ include CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/flags.make
 
-CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/flags.make
-CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o: ../main.c
-CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o -MF CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o.d -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o -c "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/main.c"
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/flags.make
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o: ../src/main.c
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o -MF CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o.d -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o -c "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/main.c"
 
-CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/main.c" > CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.i
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/main.c" > CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.i
 
-CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/main.c" -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.s
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/main.c" -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.s
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/flags.make
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o: ../src/image.c
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o -MF CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o.d -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o -c "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/image.c"
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/image.c" > CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.i
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/image.c" -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.s
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/flags.make
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o: ../src/compress.c
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o -MF CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o.d -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o -c "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/compress.c"
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/compress.c" > CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.i
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/compress.c" -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.s
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/flags.make
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o: ../src/data_hider.c
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o -MF CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o.d -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o -c "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/data_hider.c"
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/data_hider.c" > CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.i
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/data_hider.c" -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.s
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/flags.make
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o: ../src/decompress.c
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o -MF CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o.d -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o -c "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/decompress.c"
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/decompress.c" > CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.i
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/decompress.c" -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.s
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/flags.make
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o: ../src/steganograph.c
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o -MF CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o.d -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o -c "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/steganograph.c"
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/steganograph.c" > CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.i
+
+CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/steganograph.c" -o CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.s
 
 # Object files for target FAV_PC_SP_23_24_BinaryDataInImg
 FAV_PC_SP_23_24_BinaryDataInImg_OBJECTS = \
-"CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o"
+"CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o" \
+"CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o" \
+"CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o" \
+"CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o" \
+"CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o" \
+"CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o"
 
 # External object files for target FAV_PC_SP_23_24_BinaryDataInImg
 FAV_PC_SP_23_24_BinaryDataInImg_EXTERNAL_OBJECTS =
 
-FAV_PC_SP_23_24_BinaryDataInImg: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o
+FAV_PC_SP_23_24_BinaryDataInImg: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o
+FAV_PC_SP_23_24_BinaryDataInImg: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o
+FAV_PC_SP_23_24_BinaryDataInImg: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o
+FAV_PC_SP_23_24_BinaryDataInImg: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o
+FAV_PC_SP_23_24_BinaryDataInImg: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o
+FAV_PC_SP_23_24_BinaryDataInImg: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o
 FAV_PC_SP_23_24_BinaryDataInImg: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make
 FAV_PC_SP_23_24_BinaryDataInImg: CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Linking C executable FAV_PC_SP_23_24_BinaryDataInImg"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_7) "Linking C executable FAV_PC_SP_23_24_BinaryDataInImg"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

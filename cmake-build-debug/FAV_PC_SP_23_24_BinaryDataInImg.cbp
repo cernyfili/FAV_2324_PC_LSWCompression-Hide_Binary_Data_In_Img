@@ -76,7 +76,37 @@
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/main.c">
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/compress.c">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/compress.h">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/data_hider.c">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/data_hider.h">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/decompress.c">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/decompress.h">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/image.c">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/image.h">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/main.c">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/steganograph.c">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/steganograph.h">
 			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
 		</Unit>
 		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/CMakeLists.txt">

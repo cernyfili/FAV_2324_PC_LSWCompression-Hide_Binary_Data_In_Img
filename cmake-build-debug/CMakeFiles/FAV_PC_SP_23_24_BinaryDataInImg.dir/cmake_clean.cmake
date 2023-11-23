@@ -1,6 +1,16 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o"
-  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o.d"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o.d"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o.d"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o.d"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o.d"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o.d"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o"
+  "CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o.d"
   "FAV_PC_SP_23_24_BinaryDataInImg"
   "FAV_PC_SP_23_24_BinaryDataInImg.pdb"
 )

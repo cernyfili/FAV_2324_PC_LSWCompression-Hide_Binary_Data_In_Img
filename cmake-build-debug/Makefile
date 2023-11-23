@@ -129,29 +129,149 @@ FAV_PC_SP_23_24_BinaryDataInImg/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build
 .PHONY : FAV_PC_SP_23_24_BinaryDataInImg/fast
 
-main.o: main.c.o
-.PHONY : main.o
+src/compress.o: src/compress.c.o
+.PHONY : src/compress.o
 
 # target to build an object file
-main.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.o
-.PHONY : main.c.o
+src/compress.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.o
+.PHONY : src/compress.c.o
 
-main.i: main.c.i
-.PHONY : main.i
+src/compress.i: src/compress.c.i
+.PHONY : src/compress.i
 
 # target to preprocess a source file
-main.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.i
-.PHONY : main.c.i
+src/compress.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.i
+.PHONY : src/compress.c.i
 
-main.s: main.c.s
-.PHONY : main.s
+src/compress.s: src/compress.c.s
+.PHONY : src/compress.s
 
 # target to generate assembly for a file
-main.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/main.c.s
-.PHONY : main.c.s
+src/compress.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compress.c.s
+.PHONY : src/compress.c.s
+
+src/data_hider.o: src/data_hider.c.o
+.PHONY : src/data_hider.o
+
+# target to build an object file
+src/data_hider.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.o
+.PHONY : src/data_hider.c.o
+
+src/data_hider.i: src/data_hider.c.i
+.PHONY : src/data_hider.i
+
+# target to preprocess a source file
+src/data_hider.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.i
+.PHONY : src/data_hider.c.i
+
+src/data_hider.s: src/data_hider.c.s
+.PHONY : src/data_hider.s
+
+# target to generate assembly for a file
+src/data_hider.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/data_hider.c.s
+.PHONY : src/data_hider.c.s
+
+src/decompress.o: src/decompress.c.o
+.PHONY : src/decompress.o
+
+# target to build an object file
+src/decompress.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.o
+.PHONY : src/decompress.c.o
+
+src/decompress.i: src/decompress.c.i
+.PHONY : src/decompress.i
+
+# target to preprocess a source file
+src/decompress.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.i
+.PHONY : src/decompress.c.i
+
+src/decompress.s: src/decompress.c.s
+.PHONY : src/decompress.s
+
+# target to generate assembly for a file
+src/decompress.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/decompress.c.s
+.PHONY : src/decompress.c.s
+
+src/image.o: src/image.c.o
+.PHONY : src/image.o
+
+# target to build an object file
+src/image.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o
+.PHONY : src/image.c.o
+
+src/image.i: src/image.c.i
+.PHONY : src/image.i
+
+# target to preprocess a source file
+src/image.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.i
+.PHONY : src/image.c.i
+
+src/image.s: src/image.c.s
+.PHONY : src/image.s
+
+# target to generate assembly for a file
+src/image.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.s
+.PHONY : src/image.c.s
+
+src/main.o: src/main.c.o
+.PHONY : src/main.o
+
+# target to build an object file
+src/main.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o
+.PHONY : src/main.c.o
+
+src/main.i: src/main.c.i
+.PHONY : src/main.i
+
+# target to preprocess a source file
+src/main.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.i
+.PHONY : src/main.c.i
+
+src/main.s: src/main.c.s
+.PHONY : src/main.s
+
+# target to generate assembly for a file
+src/main.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.s
+.PHONY : src/main.c.s
+
+src/steganograph.o: src/steganograph.c.o
+.PHONY : src/steganograph.o
+
+# target to build an object file
+src/steganograph.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.o
+.PHONY : src/steganograph.c.o
+
+src/steganograph.i: src/steganograph.c.i
+.PHONY : src/steganograph.i
+
+# target to preprocess a source file
+src/steganograph.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.i
+.PHONY : src/steganograph.c.i
+
+src/steganograph.s: src/steganograph.c.s
+.PHONY : src/steganograph.s
+
+# target to generate assembly for a file
+src/steganograph.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/steganograph.c.s
+.PHONY : src/steganograph.c.s
 
 # Help Target
 help:
@@ -162,9 +282,24 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... FAV_PC_SP_23_24_BinaryDataInImg"
-	@echo "... main.o"
-	@echo "... main.i"
-	@echo "... main.s"
+	@echo "... src/compress.o"
+	@echo "... src/compress.i"
+	@echo "... src/compress.s"
+	@echo "... src/data_hider.o"
+	@echo "... src/data_hider.i"
+	@echo "... src/data_hider.s"
+	@echo "... src/decompress.o"
+	@echo "... src/decompress.i"
+	@echo "... src/decompress.s"
+	@echo "... src/image.o"
+	@echo "... src/image.i"
+	@echo "... src/image.s"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
+	@echo "... src/steganograph.o"
+	@echo "... src/steganograph.i"
+	@echo "... src/steganograph.s"
 .PHONY : help
 
 
