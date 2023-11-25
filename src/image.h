@@ -4,10 +4,18 @@
 // Description: 
 //
 
+#include <stdbool.h>
+
 #ifndef FAV_PC_SP_23_24_BINARYDATAINIMG_IMAGE_H
 #define FAV_PC_SP_23_24_BINARYDATAINIMG_IMAGE_H
 
-int modify_blue_lsb(const char *input_file, const char *output_file);
+/**
+ * Function to read binary data from a file and return an array of boolean values
+ * @param filename  is the path to the file
+ * @return  a pointer to the boolean array
+ *  NULL if there was an error
+ */
+bool *read_payload_file(char filename);
 
 
 

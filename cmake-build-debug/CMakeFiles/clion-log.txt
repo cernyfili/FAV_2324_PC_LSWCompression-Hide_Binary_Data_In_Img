@@ -1,4 +1,14 @@
-C:\WINDOWS\system32\wsl.exe --distribution Ubuntu --exec /bin/bash -c "export CMAKE_COLOR_DIAGNOSTICS=ON && export CLION_IDE=TRUE && export JETBRAINS_IDE=TRUE && cd '/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug' && /usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G 'CodeBlocks - Unix Makefiles' -S '/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg' -B '/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug'"
--- Configuring done
--- Generating done
--- Build files have been written to: /mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug
+"C:\Program Files\JetBrains\CLion 2022.2.4\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/JetBrains/CLion 2022.2.4/bin/ninja/win/ninja.exe" -G Ninja -S "G:\Můj disk\0_MAIN\škola\FAV\3.rocnik_23_24\_FAV_ZS_23_24\PC\semestralka\FAV_PC_SP_23_24_BinaryDataInImg" -B "G:\Můj disk\0_MAIN\škola\FAV\3.rocnik_23_24\_FAV_ZS_23_24\PC\semestralka\FAV_PC_SP_23_24_BinaryDataInImg\cmake-build-debug"
+PNG not found
+-- Could NOT find ZLIB (missing: ZLIB_LIBRARY ZLIB_INCLUDE_DIR) 
+CMake Error at C:/Program Files/JetBrains/CLion 2022.2.4/bin/cmake/win/share/cmake-3.23/Modules/FindPackageHandleStandardArgs.cmake:230 (message):
+  Could NOT find PNG (missing: PNG_LIBRARY PNG_PNG_INCLUDE_DIR) (Required is
+  at least version "1.6")
+Call Stack (most recent call first):
+  C:/Program Files/JetBrains/CLion 2022.2.4/bin/cmake/win/share/cmake-3.23/Modules/FindPackageHandleStandardArgs.cmake:594 (_FPHSA_FAILURE_MESSAGE)
+  C:/Program Files/JetBrains/CLion 2022.2.4/bin/cmake/win/share/cmake-3.23/Modules/FindPNG.cmake:159 (find_package_handle_standard_args)
+  CMakeLists.txt:14 (find_package)
+
+
+-- Configuring incomplete, errors occurred!
+See also "G:/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/cmake-build-debug/CMakeFiles/CMakeOutput.log".

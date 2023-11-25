@@ -4,15 +4,20 @@
 // Description: 
 //
 
+//Local includes
 #include "image.h"
+#include "logger.h"
+
+//Lib includes
+#include "../lib/lpng1639/png.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <zlib.h>
 
-#include "../lib/lpng1639/png.h"
 
 #define SIGNATURE "KIVPCSP_FilipCerny_hidden_payload_data"
 
@@ -35,7 +40,7 @@ bool *read_payload_file(const char filename) {
     // Open the file
     FILE *file = fopen(filename, "rb");
     if (!file) {
-        fprintf(stderr, "Error: Unable to open or read file %s.\n", filename);
+        log_message(ERROR, __FILE__, __LINE__, "Error: Unable to open or read file %s.", filename);
         return NULL;
     }
 
@@ -45,19 +50,19 @@ bool *read_payload_file(const char filename) {
     rewind(file);
 
     // Allocate memory for the boolean array
-    bool *data = (bool *) malloc(*size * sizeof(bool));
+    bool *data = (bool *) malloc(size * sizeof(bool));
     if (!data) {
         fclose(file);
-        fprintf(stderr, "Error: Memory allocation failed.\n");
+        log_message(ERROR, __FILE__, __LINE__, "Error: Memory allocation failed.");
         return NULL;
     }
 
     // Read binary data and convert to boolean values
-    size_t bytesRead = fread(data, sizeof(bool), *size, file);
-    if (bytesRead != *size) {
+    size_t bytesRead = fread(data, sizeof(bool), size, file);
+    if (bytesRead != size) {
         fclose(file);
         free(data);
-        fprintf(stderr, "Error: Unable to read the entire file.\n");
+        log_message(ERROR, __FILE__, __LINE__, "Error: Unable to read the entire file.");
         return NULL;
     }
 
@@ -67,8 +72,41 @@ bool *read_payload_file(const char filename) {
     return data;
 }
 
+/**
+ * Function to compute the CRC32 of a boolean array
+ * @param array  is the boolean array
+ * @return  the CRC32
+ * 0 if there was an error
+ */
+uint32_t compute_crc32(const bool *array) {
+    //SANITY CHECK
+    if (!array) {
+        log_message( ERROR, __FILE__, __LINE__, "Error: Invalid array pointer.");
+        return 0;
+    }
+
+    // Calculate the length of the array
+    size_t length = sizeof(array) / sizeof(array[0]);
+
+    uint32_t crc = crc32(0L, Z_NULL, 0);  // Initialize CRC32
+
+    // Iterate through the boolean array and update CRC32
+    for (size_t i = 0; i < length; ++i) {
+        // Convert boolean value to a byte (0 or 1)
+        uint8_t byte = array[i] ? 1 : 0;
+
+        // Update CRC32 with the byte
+        crc = crc32(crc, &byte, 1);
+    }
+
+    return crc;
+}
+
+
+
 
 /**
+ * //todo Problem with libpng
  * Function to modify the least significant bit of the blue color channel in each RGB pixel
  * @param input_file the path to the input PNG file
  * @param output_file the path to the output PNG file
@@ -82,12 +120,19 @@ bool *read_payload_file(const char filename) {
  *  6 if the input PNG file is not in RGB color mode
  */
 int hide_payload_data_png(const char *input_file, const char *output_file) {
-    //Check right png format of the input file
-    if (!png_check_sig( input_file, 8)) {
+    //todo chekc 24-bit RGB png
+    //todo same errors as not magical values
+
+
+    //region SANITY CHECK
+    // check right png format of the input file
+    if (!png_check_sig(input_file, 8)) {
+        fprintf(stderr, "Error: Input PNG file is not in PNG format\n");
         return 5;
     }
+    //endregion
 
-
+    //open input and output files
     FILE *fp_in = fopen(input_file, "rb");
     if (!fp_in) {
         fprintf(stderr, "Error: Unable to open input file %s\n", input_file);
@@ -100,6 +145,7 @@ int hide_payload_data_png(const char *input_file, const char *output_file) {
         fprintf(stderr, "Error: Unable to open output file %s\n", output_file);
         return 2;
     }
+
 
     png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png) {
@@ -225,10 +271,11 @@ int hide_payload_data_png(const char *input_file, const char *output_file) {
 }
 
 
+
 // Function to read BMP image
 //todo delete witdth and height
-uint8_t *read_bmp(const char *filename, int *width, int *height) {
 
+uint8_t *read_bmp(const char *filename, int *width, int *height) {
 
 
     FILE *file = fopen(filename, "rb");
@@ -251,7 +298,7 @@ uint8_t *read_bmp(const char *filename, int *width, int *height) {
 
 // Function to hide payload data in the last bit of the blue channel in an RGB image
 //todo delete witdth and height
-int hide_payload_bmp(const char *image_filepath, const int width, const int height, const int *payload_data) {
+int hide_payload_data_bmp(const char *image_filepath, const int width, const int height, const int *payload_data) {
     //Check right bmp format of the input file
     if (!bmp_check_sig(filename)) {
         return NULL;
@@ -277,11 +324,4 @@ int hide_payload_bmp(const char *image_filepath, const int width, const int heig
     free(image);
 
     return 0;
-}
-
-// Function to compute CRC32 for a given data buffer
-unsigned int calculate_crc32(const unsigned char* data, size_t size) {
-    unsigned int crc = crc32(0L, Z_NULL, 0);
-    crc = crc32(crc, data, size);
-    return crc;
 }
