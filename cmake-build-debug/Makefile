@@ -177,6 +177,30 @@ src/payload_prepare.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload_prepare.c.s
 .PHONY : src/payload_prepare.c.s
 
+src/utils/data_structures.o: src/utils/data_structures.c.o
+.PHONY : src/utils/data_structures.o
+
+# target to build an object file
+src/utils/data_structures.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/data_structures.c.o
+.PHONY : src/utils/data_structures.c.o
+
+src/utils/data_structures.i: src/utils/data_structures.c.i
+.PHONY : src/utils/data_structures.i
+
+# target to preprocess a source file
+src/utils/data_structures.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/data_structures.c.i
+.PHONY : src/utils/data_structures.c.i
+
+src/utils/data_structures.s: src/utils/data_structures.c.s
+.PHONY : src/utils/data_structures.s
+
+# target to generate assembly for a file
+src/utils/data_structures.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/data_structures.c.s
+.PHONY : src/utils/data_structures.c.s
+
 src/utils/logger.o: src/utils/logger.c.o
 .PHONY : src/utils/logger.o
 
@@ -240,6 +264,9 @@ help:
 	@echo "... src/payload_prepare.o"
 	@echo "... src/payload_prepare.i"
 	@echo "... src/payload_prepare.s"
+	@echo "... src/utils/data_structures.o"
+	@echo "... src/utils/data_structures.i"
+	@echo "... src/utils/data_structures.s"
 	@echo "... src/utils/logger.o"
 	@echo "... src/utils/logger.i"
 	@echo "... src/utils/logger.s"

@@ -9,5 +9,6 @@
 
 #include "logger.h"
 #include "memory_management.h"
+#include "data_structures.h"
 
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_UTILS_H

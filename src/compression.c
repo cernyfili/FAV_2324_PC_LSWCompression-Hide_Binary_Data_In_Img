@@ -7,32 +7,32 @@
 #define INITIAL_DICTIONARY_SIZE 256
 
 typedef struct {
-    unsigned short prefix;
+    unsigned int prefix;
     unsigned char suffix;
 } DictionaryEntry;
 
 // Function to compress binary data using LZW algorithm
-unsigned short* compress_binary_data(const unsigned char* data, size_t size, size_t* compressed_size) {
+unsigned int* compress_binary_data(const unsigned char* data, size_t size) {
     DictionaryEntry dictionary[DICTIONARY_SIZE];
-    unsigned short* result = NULL;
+    unsigned int* result = NULL;
     size_t result_capacity = 1024;
     size_t result_size = 0;
 
     // Initialize the dictionary with single-byte entries
-    for (unsigned short i = 0; i < 256; ++i) {
+    for (size_t i = 0; i < INITIAL_DICTIONARY_SIZE; ++i) {
         dictionary[i].prefix = 0xFFFF;  // Indicates no prefix
         dictionary[i].suffix = (unsigned char)i;
     }
 
     // Start compression
-    unsigned short currentCode = 256;
-    unsigned short currentPrefix = data[0];
+    unsigned int currentCode = 256;
+    unsigned int currentPrefix = data[0];
     for (size_t i = 1; i < size; ++i) {
         unsigned char currentChar = data[i];
-        unsigned short combinedCode = (currentPrefix << 8) | currentChar;
+        unsigned int combinedCode = (currentPrefix << 8) | currentChar;
 
         int found = 0;
-        for (unsigned short j = 0; j < currentCode; ++j) {
+        for (unsigned int j = 0; j < currentCode; ++j) {
             if (dictionary[j].prefix == currentPrefix && dictionary[j].suffix == currentChar) {
                 found = 1;
                 break;
@@ -44,7 +44,7 @@ unsigned short* compress_binary_data(const unsigned char* data, size_t size, siz
         } else {
             if (result_size == result_capacity) {
                 result_capacity *= 2;
-                result = realloc(result, result_capacity * sizeof(unsigned short));
+                result = realloc(result, result_capacity * sizeof(unsigned int));
                 if (!result) {
                     fprintf(stderr, "Error: Memory allocation failed.\n");
                     free(result);
@@ -66,7 +66,7 @@ unsigned short* compress_binary_data(const unsigned char* data, size_t size, siz
 
     if (result_size == result_capacity) {
         result_capacity += 1;
-        result = realloc(result, result_capacity * sizeof(unsigned short));
+        result = realloc(result, result_capacity * sizeof(unsigned int));
         if (!result) {
             fprintf(stderr, "Error: Memory allocation failed.\n");
             free(result);
@@ -76,25 +76,24 @@ unsigned short* compress_binary_data(const unsigned char* data, size_t size, siz
 
     result[result_size++] = currentPrefix;
 
-    *compressed_size = result_size;
     return result;
 }
 
 // Function to decompress binary data using LZW algorithm
-unsigned char* decompress_binary_data(const unsigned short* compressed_data, size_t compressed_size, size_t* decompressed_size) {
+unsigned char* decompress_binary_data(const unsigned int* compressed_data, size_t compressed_size, size_t* decompressed_size) {
     DictionaryEntry dictionary[DICTIONARY_SIZE];
     unsigned char* result = NULL;
     size_t result_capacity = 1024;
     size_t result_size = 0;
 
     // Initialize the dictionary with single-byte entries
-    for (unsigned short i = 0; i < INITIAL_DICTIONARY_SIZE; ++i) {
+    for (unsigned int i = 0; i < INITIAL_DICTIONARY_SIZE; ++i) {
         dictionary[i].prefix = 0xFFFF;  // Indicates no prefix
         dictionary[i].suffix = (unsigned char)i;
     }
 
     // Start decompression
-    unsigned short currentCode = compressed_data[0];
+    unsigned int currentCode = compressed_data[0];
     result = (unsigned char*) TRACKED_MALLOC(result_capacity);
     if (!result) {
         fprintf(stderr, "Error: Memory allocation failed.\n");
@@ -104,7 +103,7 @@ unsigned char* decompress_binary_data(const unsigned short* compressed_data, siz
     result[result_size++] = (unsigned char)currentCode;
 
     for (size_t i = 1; i < compressed_size; ++i) {
-        unsigned short code = compressed_data[i];
+        unsigned int code = compressed_data[i];
 
         if (code < DICTIONARY_SIZE) {
             // Output the code as a single character
@@ -116,7 +115,7 @@ unsigned char* decompress_binary_data(const unsigned short* compressed_data, siz
                 result[result_size++] = repeatChar;
             } else {
                 // Output the string represented by the code
-                unsigned short prefix = code;
+                unsigned int prefix = code;
                 while (prefix >= INITIAL_DICTIONARY_SIZE) {
                     result[result_size++] = dictionary[prefix].suffix;
                     prefix = dictionary[prefix].prefix;
@@ -151,7 +150,7 @@ unsigned char* decompress_binary_data(const unsigned short* compressed_data, siz
 
 int main() {
     // Example compressed data
-    unsigned short compressed_data[] = {0x0041, 0x0042, 0x0043, 0x0003, 0x0045, 0x0044, 0x0046};
+    unsigned int compressed_data[] = {0x0041, 0x0042, 0x0043, 0x0003, 0x0045, 0x0044, 0x0046};
 
     // Decompress the data
     size_t decompressed_size;
@@ -179,7 +178,7 @@ int main() {
 
     // Compress the binary data
     size_t compressed_size;
-    unsigned short* compressed_data = compress_binary_data(binary_data, sizeof(binary_data), &compressed_size);
+    unsigned int* compressed_data = compress_binary_data(binary_data, sizeof(binary_data), &compressed_size);
 
     // Output the compressed data (just printing for demonstration)
     printf("Compressed Data: ");

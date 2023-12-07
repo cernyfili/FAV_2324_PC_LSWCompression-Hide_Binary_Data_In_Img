@@ -1,5 +1,5 @@
 //
-// Author: Lenovo
+// Author: Filip Cerny
 // Date: 07.11.2023
 // Description: 
 //
@@ -9,238 +9,297 @@
 #include "utils/utils.h"
 
 //Lib includes
-#include "../lib/lpng1639/png.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <zlib.h>
-
-
-
-
-
+#include <png.h>
 
 
 /**
- * //todo Problem with libpng
- * Function to modify the least significant bit of the blue color channel in each RGB pixel
- * @param input_file the path to the input PNG file
- * @param output_file the path to the output PNG file
- * @return
- *  0 if successful
- *  1 if there was an error
- *  2 if the output file could not be created
- *  3 if the input file could not be opened
- *  4 if the output file could not be opened
- *  5 if an error occurred while reading the PNG file
- *  6 if the input PNG file is not in RGB color mode
+ * The size of the PNG signature in bytes.
  */
-int hide_payload_data_png(const char *input_file, const char *output_file) {
-    //todo chekc 24-bit RGB png
-    //todo same errors as not magical values
+#define PNG_SIGNATURE_SIZE 8
 
+/**
+ * The size of the BMP signature in bytes.
+ */
+#define BMP_SIGNATURE_SIZE 2
 
-    //region SANITY CHECK
-    // check right png format of the input file
-    if (!png_check_sig(input_file, 8)) {
-        fprintf(stderr, "Error: Input PNG file is not in PNG format\n");
-        return 5;
-    }
-    //endregion
+/**
+ * The BMP signature.
+ */
+#define BMP_SIGNATURE "BM"
 
-    //open input and output files
-    FILE *fp_in = fopen(input_file, "rb");
-    if (!fp_in) {
-        fprintf(stderr, "Error: Unable to open input file %s\n", input_file);
-        return 1;
-    }
+/**
+ * The size of the BMP header in bytes.
+ */
+#define BMP_HEADER_SIZE 54
 
-    FILE *fp_out = fopen(output_file, "wb");
-    if (!fp_out) {
-        fclose(fp_in);
-        fprintf(stderr, "Error: Unable to open output file %s\n", output_file);
-        return 2;
-    }
+/**
+ * The number of color components per pixel in a BMP image.
+ */
+#define PIXEL_COLOR_NUM 3
 
+/**
+ * The number of bits per pixel in a BMP image for 24-bit RGB color depth.
+ */
+#define RGB_BIT_SIZE 24
 
-    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png) {
-        fclose(fp_in);
-        fclose(fp_out);
-        fprintf(stderr, "Error: Unable to create read struct\n");
-        return 3;
-    }
+/**
+ * Hides binary data in the Least Significant Bit (LSB) of each pixel in a PNG image.
+ *
+ * @param input_filepath - The path to the input PNG file.
+ * @param binary_data - The binary data to hide. Each bit of the data will be embedded in the LSB of the image.
+ * @param output_filepath - The path to the output PNG file.
+ * @return true if the data hiding is successful, false otherwise.
+ */
+bool hide_data_lsb_png(const char *input_filepath, const bool *binary_data,
+                       const char *output_filepath) {
+    //todo binary_data length pass as parameter,
+    //todo check if binary_data fits in BMP
 
-    png_infop info = png_create_info_struct(png);
-    if (!info) {
-        png_destroy_read_struct(&png, NULL, NULL);
-        fclose(fp_in);
-        fclose(fp_out);
-        fprintf(stderr, "Error: Unable to create info struct\n");
-        return 4;
-    }
-
-    png_bytep row_pointers[1];
-
-    if (setjmp(png_jmpbuf(png))) {
-        png_destroy_read_struct(&png, &info, NULL);
-        fclose(fp_in);
-        fclose(fp_out);
-        fprintf(stderr, "Error: An error occurred while reading the PNG file\n");
-        return 5;
+    //Check if the arguments are valid
+    if (!input_filepath || !binary_data || !output_filepath) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return false;
     }
 
-    png_init_io(png, fp_in);
-    png_read_png(png, info, PNG_TRANSFORM_IDENTITY, NULL);
-    png_byte bit_depth = png_get_bit_depth(png, info);
-    png_byte color_type = png_get_color_type(png, info);
+    FILE *input_file = fopen(input_filepath, "rb");
+    FILE *output_file = fopen(output_filepath, "wb");
 
+    // Check if the file was opened successfully
+    if (!input_file || !output_file) {
+        // Unable to open file
+        LOG_MESSAGE(ERROR, "Unable to open file.");
+
+        // Close the files
+        fclose(input_file);
+        fclose(output_file);
+
+        return false;
+    }
+
+    // Check if the input file is a PNG file
+    unsigned char signature[PNG_SIGNATURE_SIZE];
+    fread(signature, 1, PNG_SIGNATURE_SIZE, input_file);
+    bool is_png = !png_sig_cmp(signature, 0, PNG_SIGNATURE_SIZE);
+    if (!is_png) {
+        LOG_MESSAGE(ERROR, "Input file is not a PNG file.");
+
+        // Close the files
+        fclose(input_file);
+        fclose(output_file);
+
+        return false;
+    }
+
+    // Create PNG read and write structures
+    png_structp png_read_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    png_structp png_write_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+    if (!png_read_ptr || !png_write_ptr) {
+        printf("Failed to create PNG read or write structure.\n");
+        fclose(input_file);
+        fclose(output_file);
+        return false;
+    }
+
+    // Create PNG info structures
+    png_infop png_info_ptr = png_create_info_struct(png_read_ptr);
+    png_infop png_end_info_ptr = png_create_info_struct(png_write_ptr);
+
+    if (!png_info_ptr || !png_end_info_ptr) {
+        printf("Failed to create PNG info structure.\n");
+        png_destroy_read_struct(&png_read_ptr, NULL, NULL);
+        png_destroy_write_struct(&png_write_ptr, NULL);
+        fclose(input_file);
+        fclose(output_file);
+        return false;
+    }
+
+    // Set up error handling
+    if (setjmp(png_jmpbuf(png_read_ptr)) || setjmp(png_jmpbuf(png_write_ptr))) {
+        printf("Error occurred during PNG read or write operation.\n");
+        png_destroy_read_struct(&png_read_ptr, &png_info_ptr, &png_end_info_ptr);
+        png_destroy_write_struct(&png_write_ptr, &png_info_ptr);
+        fclose(input_file);
+        fclose(output_file);
+        return false;
+    }
+
+    // Initialize PNG IO
+    png_init_io(png_read_ptr, input_file);
+    png_init_io(png_write_ptr, output_file);
+
+    // Read PNG header
+    png_read_info(png_read_ptr, png_info_ptr);
+
+    //Check if the input file is 24-bit RGB PNG file
+    int color_type = png_get_color_type(png_read_ptr, png_info_ptr);
     if (color_type != PNG_COLOR_TYPE_RGB) {
-        png_destroy_read_struct(&png, &info, NULL);
-        fclose(fp_in);
-        fclose(fp_out);
-        fprintf(stderr, "Error: Input PNG file is not in RGB color mode\n");
-        return 6;
+        LOG_MESSAGE(ERROR, "Input file is not a 24-bit RGB PNG image.");
+
+        //Clean up
+        png_destroy_read_struct(&png_read_ptr, &png_info_ptr, &png_end_info_ptr);
+        png_destroy_write_struct(&png_write_ptr, &png_info_ptr);
+
+        //Close the files
+        fclose(input_file);
+        fclose(output_file);
+
+        return false;
     }
 
-    // Get image details
-    int width = png_get_image_width(png, info);
-    int height = png_get_image_height(png, info);
-    png_bytep row = png_get_row_pointers(png, info)[0];
+    // Write PNG header
+    png_write_info(png_write_ptr, png_info_ptr);
 
-    if (bit_depth != 8) {
-        png_destroy_read_struct(&png, &info, NULL);
-        fclose(fp_in);
-        fclose(fp_out);
-        fprintf(stderr, "Error: Unsupported bit depth. Only 8-bit depth is supported\n");
-        return 7;
+
+    // Get image dimensions
+    png_uint_32 height = png_get_image_height(png_read_ptr, png_info_ptr);
+
+    // Allocate memory for pixel data
+    png_bytepp row_pointers = (png_bytepp) png_malloc(png_read_ptr, height *
+                                                                    sizeof(png_bytep));
+
+    // Read PNG image data
+    for (int y = 0; y < height; ++y) {
+        row_pointers[y] = (png_bytep) png_malloc(png_read_ptr, png_get_rowbytes(png_read_ptr, png_info_ptr));
+        png_read_row(png_read_ptr, row_pointers[y], NULL);
     }
 
-    // Iterate through each pixel and modify the least significant bit of the blue channel
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            uint8_t *pixel = &(row[(y * width + x) * 3]);
-            pixel[2] |= 0x01; // Set the least significant bit of the blue channel to 1
+    // Hide binary data in the LSB of each pixel
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < png_get_rowbytes(png_read_ptr, png_info_ptr); ++x) {
+            row_pointers[y][x] &= 0xFE; // Clear LSB
+            row_pointers[y][x] |= binary_data[x] & 0x01; // Set LSB according to binary data
+            //todo fix binary_data[x] should be counter
+            //todo end when end of binary data
         }
     }
 
-    if (setjmp(png_jmpbuf(png))) {
-        png_destroy_read_struct(&png, &info, NULL);
-        fclose(fp_in);
-        fclose(fp_out);
-        fprintf(stderr, "Error: An error occurred while writing the PNG file\n");
-        return 8;
+    // Write modified PNG image data
+
+    png_uint_32 height_output = png_get_image_height(png_write_ptr, png_info_ptr);
+    for (int y = 0; y < height_output; ++y) {
+        png_write_row(png_write_ptr, row_pointers[y]);
     }
 
-    // Write the modified image to the output file
-    png_structp write_png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!write_png) {
-        png_destroy_read_struct(&png, &info, NULL);
-        fclose(fp_in);
-        fclose(fp_out);
-        fprintf(stderr, "Error: Unable to create write struct\n");
-        return 9;
-    }
+    // Write end of PNG
+    png_write_end(png_write_ptr, png_end_info_ptr);
 
-    png_infop write_info = png_create_info_struct(write_png);
-    if (!write_info) {
-        png_destroy_read_struct(&png, &info, NULL);
-        png_destroy_write_struct(&write_png, NULL);
-        fclose(fp_in);
-        fclose(fp_out);
-        fprintf(stderr, "Error: Unable to create write info struct\n");
-        return 10;
-    }
-
-    png_set_compression_level(write_png, 6);
-
-    if (setjmp(png_jmpbuf(write_png))) {
-        png_destroy_read_struct(&png, &info, NULL);
-        png_destroy_write_struct(&write_png, &write_info);
-        fclose(fp_in);
-        fclose(fp_out);
-        fprintf(stderr, "Error: An error occurred while initializing the write process\n");
-        return 11;
-    }
-
-    png_init_io(write_png, fp_out);
-
-    png_set_IHDR(write_png, write_info, width, height, bit_depth, color_type, PNG_INTERLACE_NONE,
-                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-
-    png_write_info(write_png, write_info);
-
-    // Write the modified image data
-    for (int y = 0; y < height; y++) {
-        png_write_row(write_png, row);
-    }
-
-    png_write_end(write_png, NULL);
-    png_destroy_write_struct(&write_png, &write_info);
-
-    fclose(fp_in);
-    fclose(fp_out);
-
-    printf("Image modification completed.\n");
-
-    return 0;
-}
-
-
-
-
-//todo delete witdth and height
-uint8_t *read_bmp(const char *filename, int *width, int *height) {
-
-
-    FILE *file = fopen(filename, "rb");
-    if (!file) {
-        fprintf(stderr, "Error: Unable to open or read BMP file %s.\n", filename);
-        return NULL;
-    }
-
-    fseek(file, 18, SEEK_SET); // Move to width and height information
-    fread(width, sizeof(int), 1, file);
-    fread(height, sizeof(int), 1, file);
-
-    fseek(file, 54, SEEK_SET); // Move to start of image data
-    uint8_t *data = (uint8_t *) TRACKED_MALLOC((*width) * (*height) * 3);
-    fread(data, sizeof(uint8_t), (*width) * (*height) * 3, file);
-
-    fclose(file);
-    return data;
-}
-
-// Function to hide payload data in the last bit of the blue channel in an RGB image
-//todo delete witdth and height
-int hide_payload_data_bmp(const char *input_filepath, const int width, const int height, const int *payload_data,
-                          char *output_filepath) {
-    //Check right bmp format of the input file
-    if (!bmp_check_sig(filename)) {
-        return NULL;
-    }
-
-    uint8_t *image = read_bmp(input_filepath, &width, &height);
-    if (!image) {
-        return 1;
-    }
-
-    // Hide payload data in the image
-    for (int i = 0; i < width * height; ++i) {
-        // Modify the last bit of the blue channel
-        image[i * 3 + 2] = (image[i * 3 + 2] & 0xFE) | (payload_data[i] & 0x01);
-    }
-
-    // Save the modified image
-    FILE *output_file = fopen(output_filepath, "wb");
-    fwrite(image, sizeof(uint8_t), width * height * 3, output_file);
-    fclose(output_file);
 
     // Clean up
-    free(image);
+    for (int y = 0; y < height; ++y) {
+        png_free(png_read_ptr, row_pointers[y]);
+    }
+    png_free(png_read_ptr, row_pointers);
+    png_destroy_read_struct(&png_read_ptr, &png_info_ptr, &png_end_info_ptr);
+    png_destroy_write_struct(&png_write_ptr, &png_info_ptr);
 
-    return 0;
+
+    // Close the files
+    fclose(input_file);
+    fclose(output_file);
+
+    return true;
+}
+
+/**
+ * Hides binary data in the least significant bit (LSB) of each RGB value in a BMP file.
+ *
+ * @param input_filepath - Path to the input BMP file.
+ * @param binary_data - Pointer to an array of binary data to be hidden.
+ * @param output_filepath - Path to the output BMP file.
+ * @return 0 if the hiding process is successful, non-zero otherwise.
+ */
+bool hide_data_lsb_bmp(const char *input_filepath, const bool *binary_data,
+                       const char *output_filepath) {
+    //todo binary_data length pass as parameter,
+    //todo check if binary_data fits in BMP
+
+    //Check if the arguments are valid
+    if (!input_filepath || !binary_data || !output_filepath) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return false;
+    }
+
+    FILE *input_file = fopen(input_filepath, "rb");
+    FILE *output_file = fopen(output_filepath, "wb");
+
+    // Check if the file was opened successfully
+    if (!input_file || !output_file) {
+        // Unable to open file
+        LOG_MESSAGE(ERROR, "Unable to open file.");
+
+        // Close the files
+        fclose(input_file);
+        fclose(output_file);
+
+        return false;
+    }
+
+    // Check if the input file is a BMP file
+    char signature[BMP_SIGNATURE_SIZE];
+    fread(signature, sizeof(char), BMP_SIGNATURE_SIZE, input_file);
+    if (strcmp(signature, BMP_SIGNATURE) != 0) {
+        LOG_MESSAGE(ERROR, "Input file is not a BMP file.");
+
+        // Close the files
+        fclose(input_file);
+        fclose(output_file);
+
+        return false;
+    }
+
+    //Check if the input file is 24 bit RGB PNG file
+    fseek(input_file, 28, SEEK_SET);
+    unsigned short bit_count;
+    fread(&bit_count, sizeof(bit_count), 1, input_file);
+
+    if (bit_count != RGB_BIT_SIZE) {
+        LOG_MESSAGE(ERROR, "Input file is not 24 bit RGB PNG file.");
+
+        // Close the files
+        fclose(input_file);
+        fclose(output_file);
+
+        return false;
+    }
+
+    // Read BMP header
+    unsigned char header[BMP_HEADER_SIZE];
+    fread(header, sizeof(unsigned char), BMP_HEADER_SIZE, input_file);
+
+    // Write BMP header to output file
+    fwrite(header, sizeof(unsigned char), BMP_HEADER_SIZE, output_file);
+
+    // Calculate pixel data offset
+    int data_offset = header[10] + (header[11] << 8) + (header[12] << 16) + (header[13] << 24);
+
+    // Seek to pixel data offset
+    fseek(input_file, data_offset, SEEK_SET);
+
+    // Iterate over each pixel
+    unsigned char pixel[PIXEL_COLOR_NUM];
+    while (fread(pixel, sizeof(unsigned char), PIXEL_COLOR_NUM, input_file) == PIXEL_COLOR_NUM) {
+        // Convert RGB values to binary
+        unsigned char binary_pixel[PIXEL_COLOR_NUM];
+        for (int i = 0; i < PIXEL_COLOR_NUM; i++) {
+            binary_pixel[i] = pixel[i] & 0xFE; // Clear LSB
+            binary_pixel[i] |= binary_data[i] & 0x01; // Set LSB according to binary data
+            //todo fix binary_data[i] should be counter
+            //todo end when end binary data
+        }
+
+        // Write modified RGB values to output file
+        fwrite(binary_pixel, sizeof(unsigned char), PIXEL_COLOR_NUM, output_file);
+    }
+
+    // Close the files
+    fclose(input_file);
+    fclose(output_file);
+
+    return true;
 }

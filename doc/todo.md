@@ -1,5 +1,8 @@
 # TODO
 - [X] malloc functions - counter
-- [ ] png reader - fix libpng
-- [ ] bmp reader
-- [ ] lzw compress
+- [X] png reader - fix libpng
+- [X] bmp reader
+- [ ] lzw compression
+
+**Secondary**
+- [ ] check data types (vice omezeni)

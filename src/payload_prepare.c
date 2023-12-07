@@ -25,7 +25,7 @@
 //region FUNCTIONS DECLARATION
 static bool *get_data_payload_file(const char *filename);
 
-static uint32_t compute_crc32(const bool *array);
+static uint32_t compute_crc32(const BoolArray array);
 
 //endregion
 
@@ -141,20 +141,17 @@ static bool *get_data_payload_file(const char *filename) {
  * @return  the CRC32
  * 0 if there was an error
  */
-static uint32_t compute_crc32(const bool *array) {
+static uint32_t compute_crc32(const BoolArray array) {
     //SANITY CHECK
-    if (!array) {
+    if (!array.array_ptr) {
         log_message( ERROR, __FILE__, __LINE__, "Error: Invalid array pointer.");
         return 0;
     }
 
-    // Calculate the length of the array
-    size_t length = sizeof(array) / sizeof(array[0]);
-
     uint32_t crc = crc32(0L, Z_NULL, 0);  // Initialize CRC32
 
     // Iterate through the boolean array and update CRC32
-    for (size_t i = 0; i < length; ++i) {
+    for (size_t i = 0; i < array.length; ++i) {
         // Convert boolean value to a byte (0 or 1)
         uint8_t byte = array[i] ? 1 : 0;
 

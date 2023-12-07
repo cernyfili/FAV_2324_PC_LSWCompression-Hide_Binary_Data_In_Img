@@ -3,24 +3,15 @@ project(FAV_PC_SP_23_24_BinaryDataInImg C)
 
 set(CMAKE_C_STANDARD 99)
 
-set(CMAKE_FIND_LIBRARY_PREFIXES ${CMAKE_STATIC_LIBRARY_PREFIX})
-set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_STATIC_LIBRARY_SUFFIX})
-find_package(PNG 1.6 CONFIG QUIET)
-find_package(ZLIB CONFIG QUIET)
-if (NOT PNG_FOUND)
-    message("PNG not found")
-    set(CMAKE_FIND_LIBRARY_PREFIXES ${CMAKE_SHARED_LIBRARY_PREFIX})
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_SHARED_LIBRARY_SUFFIX})
-    find_package(PNG 1.6 REQUIRED)
-endif()
-if (NOT ZLIB_FOUND)
-    message("zlib not found")
-    set(CMAKE_FIND_LIBRARY_PREFIXES ${CMAKE_SHARED_LIBRARY_PREFIX})
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_SHARED_LIBRARY_SUFFIX})
-    find_package(ZLIB REQUIRED)
-endif()
+add_executable(FAV_PC_SP_23_24_BinaryDataInImg src/main.c src/utils/logger.c src/utils/logger.h src/payload_prepare.c src/payload_prepare.h src/utils/memory_management.c src/utils/memory_management.h src/utils/utils.h
+        src/utils/data_structures.c
+        src/utils/data_structures.h)
+
+find_package(PNG REQUIRED)
+include_directories(${PNG_INCLUDE_DIRS})
+
+target_link_libraries(my_executable ${PNG_LIBRARIES})
 
 
-add_executable(FAV_PC_SP_23_24_BinaryDataInImg src/main.c src/utils/logger.c src/utils/logger.h src/payload_prepare.c src/payload_prepare.h src/utils/memory_management.c src/utils/memory_management.h src/utils/utils.h)
 
 

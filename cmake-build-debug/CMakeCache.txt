@@ -233,6 +233,15 @@ ZLIB_LIBRARY_DEBUG:FILEPATH=ZLIB_LIBRARY_DEBUG-NOTFOUND
 //Path to a library.
 ZLIB_LIBRARY_RELEASE:FILEPATH=/usr/lib/x86_64-linux-gnu/libz.so
 
+//The directory containing a CMake configuration file for libpng-dev.
+libpng-dev_DIR:PATH=libpng-dev_DIR-NOTFOUND
+
+//The directory containing a CMake configuration file for libpng.
+libpng_DIR:PATH=libpng_DIR-NOTFOUND
+
+//The directory containing a CMake configuration file for lpng.
+lpng_DIR:PATH=lpng_DIR-NOTFOUND
+
 
 ########################
 # INTERNAL cache entries
@@ -370,7 +379,7 @@ CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Details about finding PNG
-FIND_PACKAGE_MESSAGE_DETAILS_PNG:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpng.so][/usr/include][v1.6.37(1.6)]
+FIND_PACKAGE_MESSAGE_DETAILS_PNG:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpng.so][/usr/include][v1.6.37()]
 //Details about finding ZLIB
 FIND_PACKAGE_MESSAGE_DETAILS_ZLIB:INTERNAL=[/usr/lib/x86_64-linux-gnu/libz.so][/usr/include][v1.2.11()]
 //ADVANCED property for variable: PNG_LIBRARY_DEBUG
