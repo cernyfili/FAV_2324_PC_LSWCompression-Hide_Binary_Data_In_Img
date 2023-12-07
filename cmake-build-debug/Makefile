@@ -153,6 +153,78 @@ src/main.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.s
 .PHONY : src/main.c.s
 
+src/payload_prepare.o: src/payload_prepare.c.o
+.PHONY : src/payload_prepare.o
+
+# target to build an object file
+src/payload_prepare.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload_prepare.c.o
+.PHONY : src/payload_prepare.c.o
+
+src/payload_prepare.i: src/payload_prepare.c.i
+.PHONY : src/payload_prepare.i
+
+# target to preprocess a source file
+src/payload_prepare.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload_prepare.c.i
+.PHONY : src/payload_prepare.c.i
+
+src/payload_prepare.s: src/payload_prepare.c.s
+.PHONY : src/payload_prepare.s
+
+# target to generate assembly for a file
+src/payload_prepare.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload_prepare.c.s
+.PHONY : src/payload_prepare.c.s
+
+src/utils/logger.o: src/utils/logger.c.o
+.PHONY : src/utils/logger.o
+
+# target to build an object file
+src/utils/logger.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/logger.c.o
+.PHONY : src/utils/logger.c.o
+
+src/utils/logger.i: src/utils/logger.c.i
+.PHONY : src/utils/logger.i
+
+# target to preprocess a source file
+src/utils/logger.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/logger.c.i
+.PHONY : src/utils/logger.c.i
+
+src/utils/logger.s: src/utils/logger.c.s
+.PHONY : src/utils/logger.s
+
+# target to generate assembly for a file
+src/utils/logger.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/logger.c.s
+.PHONY : src/utils/logger.c.s
+
+src/utils/memory_management.o: src/utils/memory_management.c.o
+.PHONY : src/utils/memory_management.o
+
+# target to build an object file
+src/utils/memory_management.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/memory_management.c.o
+.PHONY : src/utils/memory_management.c.o
+
+src/utils/memory_management.i: src/utils/memory_management.c.i
+.PHONY : src/utils/memory_management.i
+
+# target to preprocess a source file
+src/utils/memory_management.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/memory_management.c.i
+.PHONY : src/utils/memory_management.c.i
+
+src/utils/memory_management.s: src/utils/memory_management.c.s
+.PHONY : src/utils/memory_management.s
+
+# target to generate assembly for a file
+src/utils/memory_management.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/memory_management.c.s
+.PHONY : src/utils/memory_management.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -165,6 +237,15 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/payload_prepare.o"
+	@echo "... src/payload_prepare.i"
+	@echo "... src/payload_prepare.s"
+	@echo "... src/utils/logger.o"
+	@echo "... src/utils/logger.i"
+	@echo "... src/utils/logger.s"
+	@echo "... src/utils/memory_management.o"
+	@echo "... src/utils/memory_management.i"
+	@echo "... src/utils/memory_management.s"
 .PHONY : help
 
 

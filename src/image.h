@@ -15,7 +15,7 @@
  * @return  a pointer to the boolean array
  *  NULL if there was an error
  */
-bool *read_payload_file(char filename);
+bool *get_data_payload_file(char filename);
 
 
 

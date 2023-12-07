@@ -21,6 +21,6 @@ if (NOT ZLIB_FOUND)
 endif()
 
 
-add_executable(FAV_PC_SP_23_24_BinaryDataInImg src/main.c src/logger.c src/logger.h)
+add_executable(FAV_PC_SP_23_24_BinaryDataInImg src/main.c src/utils/logger.c src/utils/logger.h src/payload_prepare.c src/payload_prepare.h src/utils/memory_management.c src/utils/memory_management.h src/utils/utils.h)
 
 

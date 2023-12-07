@@ -16,7 +16,7 @@ const LogLevelInfo LogLevelInfoArray[] = {
         {ERROR, "ERROR"}
 };
 
-void log_message(LogLevel level, char* file, int line, const char *format, ...) {
+void log_message(LogLevel level, const char* file, int line, const char *format, ...) {
     // Open the log file in append mode
     FILE *logFile = fopen("logfile.txt", "a");
 

@@ -10,6 +10,8 @@
 
 #define ARGUMENT_NUM 4
 
+//todo write
+
 /**
  * @brief main function
  * @param argc
@@ -26,7 +28,7 @@ int main(int argc, char *argv[]) {
 
     //arguments to variable
     char *image_filepathpath = argv[1];
-    char *direction_flag_flag = argv[2];
+    char *direction_flag = argv[2];
     char *payload_filepathpath = argv[3];
 
     if (strcmp(direction_flag, "-h") == 0) {
