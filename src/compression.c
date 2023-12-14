@@ -44,7 +44,7 @@ unsigned int* compress_binary_data(const unsigned char* data, size_t size) {
         } else {
             if (result_size == result_capacity) {
                 result_capacity *= 2;
-                result = realloc(result, result_capacity * sizeof(unsigned int));
+                result = realloc(result, result_capacity * sizeof(unsigned int));//todo check why realloc
                 if (!result) {
                     fprintf(stderr, "Error: Memory allocation failed.\n");
                     free(result);

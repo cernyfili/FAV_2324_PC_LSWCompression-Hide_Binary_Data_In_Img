@@ -10,7 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
-unsigned short *prepare_payload_data(const char *filename);
+bool ** prepare_payload_data(const char *filename);
 
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_PAYLOAD_PREPARE_H

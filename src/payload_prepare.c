@@ -23,9 +23,9 @@
 
 
 //region FUNCTIONS DECLARATION
-static bool *get_data_payload_file(const char *filename);
+static bool get_array_from_payload_file(const char *filename, const BoolArray *output_arr);
 
-static uint32_t compute_crc32(const BoolArray array);
+static uint32_t compute_crc32(const BoolArray data);
 
 //endregion
 
@@ -38,12 +38,12 @@ static uint32_t compute_crc32(const BoolArray array);
  * and signs the data
  * @param filename is the path to the file
  * @param final_size is the size of the final data
- * @return  the pointer to the final data
+ * @return  FREE MEMORY - the pointer to the final data
  *         NULL if there was an error
  */
-unsigned short *prepare_payload_data(const char *filename) {
+bool ** prepare_payload_data(const char *filename) {
     // Get payload data from file
-    bool *payload_data = get_data_payload_file(filename);
+    bool *payload_data = get_array_from_payload_file(filename, NULL);
     if (payload_data == NULL) {
         LOG_MESSAGE(ERROR, "Error: Unable to read the entire file.");
         return NULL;
@@ -61,13 +61,15 @@ unsigned short *prepare_payload_data(const char *filename) {
     size_t final_size = compressed_size + sizeof(SIGNATURE) + sizeof(uint32_t);
 
     // Allocate memory for the final data
-    unsigned short *final_data = TRACKED_MALLOC(final_size);
+    bool *final_data = TRACKED_MALLOC(final_size);
     if (!final_data) {
         LOG_MESSAGE(ERROR, "Error: Memory allocation failed.");
         free(payload_data);
         free(compressed_payload);
         return NULL;
     }
+
+    //todo not safe check memcpy
 
     // Add signature at the beginning of the final data
     memcpy(final_data, SIGNATURE, sizeof(SIGNATURE));
@@ -82,7 +84,7 @@ unsigned short *prepare_payload_data(const char *filename) {
     free(payload_data);
     free(compressed_payload);
 
-    return final_data;
+    return &final_data;
 }
 
 /**
@@ -94,17 +96,17 @@ unsigned short *prepare_payload_data(const char *filename) {
  *  a pointer to the boolean array
  *  NULL if there was an error
  */
-static bool *get_data_payload_file(const char *filename) {
+static bool get_array_from_payload_file(const char *filename, BoolArray *output_arr) {
     //SANITY CHECK
     if (!filename) {
-        return NULL;
+        return false;
     }
 
     // Open the file
     FILE *file = fopen(filename, "rb");
     if (!file) {
         LOG_MESSAGE(ERROR, "Error: Unable to open or read file %s.", filename);
-        return NULL;
+        return false;
     }
 
     // Determine the size of the file
@@ -117,7 +119,7 @@ static bool *get_data_payload_file(const char *filename) {
     if (!data) {
         fclose(file);
         LOG_MESSAGE(ERROR, "Error: Memory allocation failed.");
-        return NULL;
+        return false;
     }
 
     // Read binary data and convert to boolean values
@@ -126,34 +128,44 @@ static bool *get_data_payload_file(const char *filename) {
         fclose(file);
         free(data);
         LOG_MESSAGE(ERROR, "Error: Unable to read the entire file.");
-        return NULL;
+        return false;
     }
+
+    *output_arr = TRACKED_MALLOC(sizeof(*output_arr));
+    if (*output_arr == NULL) {
+        // Memory allocation failed
+        // Handle error
+    }
+    *output_arr = {data, size};
+
 
     // Close the file
     fclose(file);
 
-    return data;
+    return true;
 }
 
 /**
  * Function to compute the CRC32 of a boolean array
- * @param array  is the boolean array
+ * @param data  is the boolean array
  * @return  the CRC32
  * 0 if there was an error
  */
-static uint32_t compute_crc32(const BoolArray array) {
+static uint32_t compute_crc32(const BoolArray data) {
     //SANITY CHECK
-    if (!array.array_ptr) {
-        log_message( ERROR, __FILE__, __LINE__, "Error: Invalid array pointer.");
+    if (!data.array_ptr) {
+        log_message(ERROR, __FILE__, __LINE__, "Error: Invalid array pointer.");
         return 0;
     }
+
+    //check if it 
 
     uint32_t crc = crc32(0L, Z_NULL, 0);  // Initialize CRC32
 
     // Iterate through the boolean array and update CRC32
-    for (size_t i = 0; i < array.length; ++i) {
+    for (size_t i = 0; i < data.length; ++i) {
         // Convert boolean value to a byte (0 or 1)
-        uint8_t byte = array[i] ? 1 : 0;
+        uint8_t byte = data.array_ptr[i] ? 1 : 0;
 
         // Update CRC32 with the byte
         crc = crc32(crc, &byte, 1);
