@@ -54,8 +54,7 @@ bool ** prepare_payload_data(const char *filename) {
 
     // Compress payload data
     size_t compressed_size;
-    unsigned short *compressed_payload = compress_binary_data((const unsigned char *) payload_data, sizeof(bool),
-                                                              &compressed_size);
+    unsigned short *compressed_payload = lzw_compress((const unsigned char *) payload_data, NULL);
 
     // Calculate the size of the final data (including signature and CRC32)
     size_t final_size = compressed_size + sizeof(SIGNATURE) + sizeof(uint32_t);

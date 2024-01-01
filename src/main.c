@@ -15,13 +15,13 @@
 
 #define ARGUMENT_COUNT 4
 
-//todo write
-
-//region FUNCTIONS DECLARATION
-
 #define HIDE_DATA_FLAG "-h"
 
 #define EXTRACT_DATA_FLAG "-x"
+
+//todo write
+
+//region FUNCTIONS DECLARATION
 
 static bool
 hide_payload(const char *input_image_filepath, const char *hide_payload_filepath, const char *output_image_filepath);
@@ -49,31 +49,34 @@ int main(int argc, char *argv[]) {
     //arguments to variable
     char *direction_flag = argv[2];
 
+    //flag to hide data
     if (strcmp(direction_flag, HIDE_DATA_FLAG) == 0) {
         char *input_image_filepath = argv[1];
         char *output_image_filepath = argv[1];
         char *hide_payload_filepath = argv[3];
-        
+
         // Hide the payload into the image
-        if (hide_payload(input_image_filepath, hide_payload_filepath, output_image_filepath) == 0) {
+        bool is_success = hide_payload(input_image_filepath, hide_payload_filepath, output_image_filepath);
+        if (is_success) {
             printf("Hiding completed.\n");
         } else {
-            fprintf(stderr, "Error while hiding the payload.\n");
+            LOG_MESSAGE(ERROR, "Error: Unable to hide the payload into the image.");
             return 2;
         }
+    //flag to extract data
     } else if (strcmp(direction_flag, EXTRACT_DATA_FLAG) == 0) {
         char *input_image_filepath = argv[1];
         char *output_payload_filepath = argv[3];
-        
+
         // Extract the payload from the image
         if (extract_payload(input_image_filepath, output_payload_filepath) == 0) {
             printf("Extraction completed.\n");
         } else {
-            fprintf(stderr, "Error while extracting the payload.\n");
+            LOG_MESSAGE(ERROR, "Error: Unable to extract the payload from the image.");
             return 3;
         }
     } else {
-        fprintf(stderr, "Invalid direction flag. Use -h for hiding or -x for extraction.\n");
+        LOG_MESSAGE(ERROR, "Invalid direction flag. Use -h for hiding or -x for extraction.");
         return 4;
     }
 
@@ -87,7 +90,8 @@ int main(int argc, char *argv[]) {
  * @param hide_payload_filepath
  * @return
  */
-static bool hide_payload(const char *input_image_filepath, const char *hide_payload_filepath, const char *output_image_filepath) {
+static bool
+hide_payload(const char *input_image_filepath, const char *hide_payload_filepath, const char *output_image_filepath) {
     //Check if the arguments are valid
     if (!input_image_filepath || !hide_payload_filepath || !output_image_filepath) {
         LOG_MESSAGE(ERROR, "Invalid arguments.");

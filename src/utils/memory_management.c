@@ -52,5 +52,4 @@ void tracked_free(void* ptr, const char* file, int line) {
 
     // If the pointer is not found, it was not allocated by tracked_malloc
     LOG_MESSAGE(ERROR, "Attempted to free untracked memory in %s at line %d\n");
-    log_message(ERROR, file, line, "Attempted to free untracked memory in %s at line %d\n", file, line);
 }

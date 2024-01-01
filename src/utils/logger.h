@@ -15,7 +15,9 @@ typedef enum {
     ERROR
 } LogLevel;
 
-// Struct to hold both enum value and string representation
+/**
+ * Struct to hold both enum value and string representation
+ */
 typedef struct {
     LogLevel level;
     const char *string;

@@ -161,10 +161,10 @@ bool extract_data_lsb(const char *input_image_filepath, const char *output_paylo
 
     // Check if the input file is a BMP file
     if (strcmp(extension, ".bmp") == 0) {
-        bool result = extract_data_lsb_bmp(input_image_filepath, output_payload_filepath);
+        bool is_succes = extract_data_lsb_bmp(input_image_filepath, output_payload_filepath);
 
         //Check if the extraction process was successful
-        if (!result) {
+        if (!is_succes) {
             LOG_MESSAGE(ERROR, "Error while extracting the payload.");
             return false;
         }
@@ -190,6 +190,7 @@ bool extract_data_lsb(const char *input_image_filepath, const char *output_paylo
     LOG_MESSAGE(ERROR, "Input file is not a BMP or PNG file.");
     return false;
 }
+
 
 /**
  * Hides binary data in the Least Significant Bit (LSB) of each pixel in a PNG image.
