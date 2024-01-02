@@ -18,6 +18,7 @@ typedef unsigned char PayloadType;
 typedef struct {
     PayloadType *array;
     size_t length;
+    size_t capacity;
 } PayloadArray;
 
 

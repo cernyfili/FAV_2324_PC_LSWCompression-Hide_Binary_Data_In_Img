@@ -30,7 +30,7 @@
 //endregion
 
 //region FUNCTIONS DECLARATION
-
+bool dynamicarray_add_element(DynamicArray *dynamic_array, void* element, const size_t element_size);
 //endregion
 
 //region FUNCTIONS DEFINITIONS
@@ -93,7 +93,7 @@ DicValueType dictionary_get_value_to_code(const Dictionary *dictionary, const Di
 }
 
 bool dictionary_add_entry(Dictionary *dictionary, const DictionaryEntry entry) {
-    //if value doesnt fit
+    /*//if value doesnt fit
     if (dictionary->length == dictionary->capacity) {
         size_t new_capacity = dictionary->capacity + DIC_ARR_INC;
 
@@ -113,11 +113,13 @@ bool dictionary_add_entry(Dictionary *dictionary, const DictionaryEntry entry) {
 
     dictionary->dictionary_array[dictionary->length++] = entry;
 
-    return true;
+    return true;*/
+
+    return dynamicarray_add_element((DynamicArray *) dictionary, (void *) &entry, sizeof(DictionaryEntry));
 }
 
 bool dicvaluearray_add_element(DicValueArray *dic_value_array, const DicValueType element) {
-    // If array is full, increase capacity
+    /*// If array is full, increase capacity
     if (dic_value_array->length == dic_value_array->capacity) {
         size_t new_capacity = dic_value_array->capacity + DIC_ARR_INC;
 
@@ -136,6 +138,33 @@ bool dicvaluearray_add_element(DicValueArray *dic_value_array, const DicValueTyp
     }
 
     dic_value_array->array[dic_value_array->length++] = element;
+
+    return true;*/
+
+    return dynamicarray_add_element((DynamicArray *) dic_value_array, element, sizeof(DicValueType));
+}
+
+bool dynamicarray_add_element(DynamicArray *dynamic_array, void* element, const size_t element_size) {
+    //if value doesnt fit
+    if (dynamic_array->length == dynamic_array->capacity) {
+        size_t new_capacity = dynamic_array->capacity + DIC_ARR_INC;
+
+        void *temp_ptr = realloc(dynamic_array->array, new_capacity * element_size);
+        if (temp_ptr == NULL) {
+            LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+            TRACKED_FREE(temp_ptr);
+            dynamic_array->array = NULL;
+
+            return false; // Memory allocation failed
+        }
+
+        dynamic_array->array = temp_ptr;
+        dynamic_array->capacity = new_capacity;
+        temp_ptr = NULL;
+    }
+
+    memcpy(dynamic_array->array + dynamic_array->length * element_size, element, element_size);
+    dynamic_array->length = dynamic_array->length++;
 
     return true;
 }

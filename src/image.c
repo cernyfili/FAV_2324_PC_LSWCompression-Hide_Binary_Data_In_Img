@@ -7,6 +7,7 @@
 //Local includes
 #include "image.h"
 #include "utils/utils.h"
+#include "utils/dictionary.h"
 
 //Lib includes
 #include <stdio.h>
@@ -48,6 +49,8 @@
 #define RGB_BIT_SIZE 24
 
 //region FUNCTIONS DECLARATION
+#define INITIAL_PAYLOADARRAY_SIZE 1000
+
 /**
  * Hides binary data in the Least Significant Bit (LSB) of each pixel in a PNG image.
  *
@@ -89,6 +92,8 @@ static bool extract_data_lsb_bmp(const char *input_image_filepath, PayloadArray 
 
 static bool is_png_file(FILE *input_file);
 
+static bool payloadarray_add_element(PayloadArray * payload_array, PayloadType element);
+
 //endregion
 
 //region FUNCTIONS DEFINITIONS
@@ -101,6 +106,12 @@ static bool is_png_file(FILE *input_file);
  * @return  0 if the hiding process is successful, non-zero otherwise.
  */
 static bool get_next_payload_bit(PayloadArray *payload_array, size_t *array_index, size_t *element_bit_shift);
+
+static bool get_last_bit(unsigned char value);
+
+static bool payload_array_add_bit(PayloadArray *data, bool bit, size_t *array_index, size_t *element_bitshift);
+
+static bool payloadarray_initialize(PayloadArray *data);
 
 bool hide_data_lsb(const char *input_filepath, const PayloadArray hide_data,
                    const char *output_filepath) {
@@ -657,7 +668,7 @@ static bool extract_data_lsb_bmp(const char *input_image_filepath, PayloadArray 
     unsigned char header[BMP_HEADER_SIZE];
     fread(header, sizeof(unsigned char), BMP_HEADER_SIZE, input_file);
     size_t payload_array_index = 0;
-    size_t payload_element_index = 0;
+    size_t payload_element_bitshift = 0;
 
     //weight and width from header
     int width = *(int*)&header[18];
@@ -671,59 +682,123 @@ static bool extract_data_lsb_bmp(const char *input_image_filepath, PayloadArray 
         fread(row_array, sizeof(unsigned char), row_count, input_file);
         for(int j = 0; j < width*3; j += 3)
         {
-            unsigned char r_value = row_array[j];
+            unsigned char r_value = row_array[j + 2];
             unsigned char g_value = row_array[j + 1];
             unsigned char b_value = row_array[j];
 
-            //change last bit of b_value to ptr_hidden_data
+            //save lsb to payload_array
+            bool lsb_bit = get_last_bit(b_value);
+
+            bool is_succes = payload_array_add_bit(ptr_hidden_data, lsb_bit, &payload_array_index, &payload_element_bitshift);
+            if (!is_succes){
+                LOG_MESSAGE( ERROR, "Cannot add bit to payload array");
+                return false;
+            }
+
+            /*//change last bit of b_value to ptr_hidden_data
             bool next_payload_bit = get_next_payload_bit(ptr_hidden_data, &payload_array_index, &payload_element_index);
 
             bool is_succes = set_last_bit(next_payload_bit, &b_value);
             if (!is_succes){
                 LOG_MESSAGE( ERROR, "Cannot change last bit");
                 return false;
-            }
+            }*/
 
         }
     }
     fclose(input_file);
     return true;
 
-    //)_________________________________________
+}
 
-    // Calculate pixel row_array offset
-    int data_offset = header[10] + (header[11] << 8) + (header[12] << 16) + (header[13] << 24);
+static bool payload_array_add_bit(PayloadArray *data, bool bit, size_t *array_index, size_t *element_bitshift) {
+    bool is_succes;
 
-    // Seek to pixel row_array offset
-    fseek(input_file, data_offset, SEEK_SET);
-
-    // Iterate over each pixel
-    unsigned char pixel[PIXEL_COLOR_NUM];
-    while (fread(pixel, sizeof(unsigned char), PIXEL_COLOR_NUM, input_file) == PIXEL_COLOR_NUM) {
-        // Convert RGB values to binary
-        unsigned char binary_pixel[PIXEL_COLOR_NUM];
-        for (int i = 0; i < PIXEL_COLOR_NUM; i++) {
-            binary_pixel[i] = pixel[i];
-            //todo binary shift
-            //todo fix binary_data[i] should be counter
-            //todo end when end binary row_array
-        }
-
-        //todo add to output binary_pixel
+    // Ensure the payload array is initialized
+    if (!data || !data->array) {
+        LOG_MESSAGE(ERROR, "Payload array is not initialized.");
+        return false;
     }
 
-    // Close the files
-    fclose(input_file);
+    // Ensure dynamic array is initialized
+    if (data->length == 0) {
+        is_succes = payloadarray_initialize(data);
+        if (!is_succes) {
+            LOG_MESSAGE(ERROR, "Failed to initialize dynamic array for payload.");
+            return false;
+        }
+    }
+
+    // Ensure valid array index
+    if (*array_index >= data->length) {
+        // Need to add a new element to the dynamic array
+        PayloadType new_element = 0;
+        is_succes = payloadarray_add_element(data, new_element);
+        if (!is_succes) {
+            LOG_MESSAGE(ERROR, "Failed to add new element to payload array.");
+            return false;
+        }
+    }
+
+    // Set the bit in the current element
+    if (bit) {
+        data->array[*array_index] |= (1 << *element_bitshift);
+    } else {
+        data->array[*array_index] &= ~(1 << *element_bitshift);
+    }
+
+    // Update array index and bit shift for the next iteration
+    if (*element_bitshift == (sizeof(PayloadType) - 1)) {
+        // Move to the next element in the array
+        (*array_index)++;
+        *element_bitshift = 0;
+    } else {
+        // Move to the next bit in the current element
+        (*element_bitshift)++;
+    }
 
     return true;
 
 }
 
+static bool payloadarray_initialize(PayloadArray *data) {
+    data->length = 0;
+    data->array = TRACKED_MALLOC(sizeof(PayloadType) * INITIAL_PAYLOADARRAY_SIZE);
+    if (!data->array){
+        LOG_MESSAGE(ERROR, "Failed to allocate memory for payload array.");
+        return false;
+    }
+    data->capacity = INITIAL_PAYLOADARRAY_SIZE;
+
+    return true;
+}
+
+static bool payloadarray_add_element(PayloadArray * payload_array, PayloadType element){
+    return dynamicarray_add_element((DynamicArray *) payload_array, &element, sizeof(PayloadType));
+}
+
+
+static bool get_last_bit(unsigned char value) { return value & 0x01; }
+
 static bool get_next_payload_bit(PayloadArray *payload_array, size_t *array_index, size_t *element_bit_shift) {
+    if (*array_index >= payload_array->length){
+        return NULL;
+    }
+    if (*element_bit_shift >= sizeof(PayloadType)){
+        return NULL;
+    }
 
+    bool next_bit = ((payload_array->array)[*array_index] >> *element_bit_shift) & 0x01;
 
-    bool next_bit = (payload_array->array[array_index] >> element_bit_shift) & 0x01;
+    if (*element_bit_shift == (sizeof(PayloadType) - 1)){
+        *element_bit_shift = 0;
+    } else{
+        (*element_bit_shift)++;
+    }
 
+    (*array_index)++;
+
+    return next_bit;
 }
 
 

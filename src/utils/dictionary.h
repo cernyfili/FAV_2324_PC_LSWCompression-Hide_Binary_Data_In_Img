@@ -37,6 +37,13 @@ typedef struct {
     size_t capacity;
 } Dictionary;
 
+typedef struct {
+    void *array;
+    size_t length;
+    size_t capacity;
+} DynamicArray;
+
+
 
 DicCodeType dictionary_get_code_to_value(const Dictionary *dictionary, DicValueType value);
 
@@ -53,5 +60,7 @@ bool dicvaluearray_add_element(DicValueArray *dic_value_array, const DicValueTyp
 bool is_value_invalid(const const DicValueType value);
 
 bool is_code_invalid(DicCodeType code);
+
+bool dynamicarray_add_element(DynamicArray *dynamic_array, void* element, const size_t element_size);
 
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_DICTIONARY_H
