@@ -7,7 +7,7 @@
 //Local includes
 #include "compression.h"
 #include "utils/utils.h"
-#include "utils/stack.h"
+#include "utils/dictionary.h"
 
 //Lib includes
 #include <stdio.h>
@@ -15,45 +15,115 @@
 #include <string.h>
 #include <limits.h>
 
-#define INITIAL_DICTIONARY_SIZE 256
-
-#define CALC_STR_MEM_SIZE(n) ((n) * sizeof(char) + 1)
-#define CALC_STR_SIZE(n) ((n) + 1)
-
-#define DIC_ARR_INC 1000
+//region DEFINE, MACROS
+#define LZW_COMPRESSION_RATE 0.6
+#define STRING_NULL_TERMINATOR '\0'
+//endregion
 
 
-typedef struct {
-    DicCodeType code;
-    unsigned char *value;
-} DictionaryEntry;
-
-typedef struct {
-    size_t length;
-    DicCodeType *array;
-} DicCodeArray;
-
-typedef struct {
-    DicValueType *array;
-    size_t length;
-    size_t capacity;
-} DicValueArray;
-
-typedef struct {
-    DictionaryEntry *dictionary_array;
-    size_t length;
-    size_t capacity;
-} Dictionary;
+//region STRUCTS
 
 
-DicCodeType dictionary_get_code_to_value(const Dictionary *dictionary, const DicValueType value);
-
-bool dictionary_add_entry(Dictionary *dictionary, const DictionaryEntry entry);
-
-bool dictionary_init(Dictionary *dictionary);
+//endregion
 
 
-void dictionary_free(Dictionary *dictionary);
+
+
+
+//region FUNCTIONS DECLARATION
+static bool lzw_compress(const char *data, DicCodeArray *compressed_data);
+
+static bool lzw_decompress(DicCodeArray compressed_data, DicValueArray *ptr_decompressed_data);
+
+//endregion
+
+
+//region FUNCTIONS DEFINITIONS
+
+//region PUBLIC FUNCTIONS
+bool compress_payload(const PayloadArray data, PayloadArray *ptr_compressed_data){
+    void* temp_ptr;
+    int result;
+
+    // Convert data to char array
+    char* lzw_data = (char*)data.array;
+    //region Add null terminator
+    size_t new_length = data.length;//char is size of one
+    temp_ptr = realloc(lzw_data, CALC_STR_MEM_SIZE(new_length));
+    if (temp_ptr == NULL) {
+        LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+        TRACKED_FREE(lzw_data);
+        return false;
+    }
+    lzw_data = temp_ptr;
+    temp_ptr = NULL;
+    lzw_data[data.length] = STRING_NULL_TERMINATOR;
+    //endregion
+
+    DicCodeArray lzw_compressed_data;
+
+    // Call lzw_compress function
+    bool is_success = lzw_compress(lzw_data, &lzw_compressed_data);
+
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Error: Unable to compress payload data.");
+        return false;
+    }
+
+    //copy convert_compressed_data to compressed_data
+    ptr_compressed_data->length = (size_t)((double)lzw_compressed_data.length * (sizeof(DicCodeType) / (double) sizeof(PayloadType)));
+
+    size_t size = ptr_compressed_data->length * sizeof(PayloadType);
+    ptr_compressed_data->array = (PayloadType *)TRACKED_MALLOC(size);
+    if (!ptr_compressed_data->array) {
+        LOG_MESSAGE(ERROR, "Error: Memory allocation failed.");
+        return false;
+    }
+
+    memcpy(ptr_compressed_data->array, lzw_compressed_data.array, size);
+
+    TRACKED_FREE(lzw_compressed_data.array);
+
+
+    // Return the result of compression
+    return true;
+}
+
+bool decompress_payload(const PayloadArray compressed_data, PayloadArray *ptr_uncompressed_data){
+
+    // Convert compressed_data to DicCodeArray
+    DicCodeArray lzw_compressed_data;
+    lzw_compressed_data.length = (size_t)((double)compressed_data.length * (sizeof(PayloadType) / (double) sizeof(DicCodeType)));
+    lzw_compressed_data.array = (DicCodeType *) compressed_data.array;
+
+    // Call lzw_decompress function
+    DicValueArray lzw_decompressed_data;
+    bool is_success = lzw_decompress(lzw_compressed_data, &lzw_decompressed_data);
+
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Error: Unable to decompress payload data.");
+        return false;
+    }
+
+    // Convert lzw_decompressed_data to PayloadArray
+    ptr_uncompressed_data->length = lzw_decompressed_data.length * (sizeof(DicValueType) / sizeof(PayloadType));
+    ptr_uncompressed_data->array = (PayloadType *)TRACKED_MALLOC(ptr_uncompressed_data->length * sizeof(PayloadType));
+    if (!ptr_uncompressed_data->array) {
+        LOG_MESSAGE(ERROR, "Error: Memory allocation failed.");
+        return false;
+    }
+
+    memcpy(ptr_uncompressed_data->array, lzw_decompressed_data.array, ptr_uncompressed_data->length * sizeof(PayloadType));
+
+    TRACKED_FREE(lzw_decompressed_data.array);
+
+    // Return the result of decompression
+    return true;
+}
+//endregion
+
+
+//region PRIVATE FUNCTIONS
 
 /**
  * @brief Function to compress binary data using LZW algorithm
@@ -67,7 +137,7 @@ void dictionary_free(Dictionary *dictionary);
  * @param size
  * @return
  */
-bool lzw_compress(const char *data, DicCodeArray *compressed_data) {
+static bool lzw_compress(const char *data, DicCodeArray *compressed_data) {
     if (!data) {
         LOG_MESSAGE(ERROR, "Error: Data is NULL.\n");
         return false;
@@ -95,7 +165,7 @@ bool lzw_compress(const char *data, DicCodeArray *compressed_data) {
     //endregion
 
     // Start compression
-    DicCodeType next_dic_code = INITIAL_DICTIONARY_SIZE;//start where we ended 256
+    DicCodeType next_dic_code = dictionary.length;//start where we ended 256
 
     //LZW P_INPUT_CHAR = first input character
     DicValueType p_input_char = TRACKED_MALLOC(CALC_STR_MEM_SIZE(1));
@@ -137,7 +207,7 @@ bool lzw_compress(const char *data, DicCodeArray *compressed_data) {
         DicCodeType code = dictionary_get_code_to_value(&dictionary, combined_pc);
 
         //LZW IF P_INPUT_CHAR + C_NEXT_CHAR is in the string table
-        if (code == DIC_CODE_INVALID) {
+        if (is_code_invalid(code)) {
 
             //LZW P_INPUT_CHAR = P_INPUT_CHAR + C_NEXT_CHAR
             size_t new_length = strlen((char *) combined_pc);
@@ -161,7 +231,7 @@ bool lzw_compress(const char *data, DicCodeArray *compressed_data) {
             }
 
             DicCodeType tmp_code = dictionary_get_code_to_value(&dictionary, p_input_char);
-            if (tmp_code == DIC_CODE_INVALID) {
+            if (is_code_invalid(tmp_code)) {
                 LOG_MESSAGE(ERROR, "Error: Code not found in dictionary.\n");
                 return false;
             }
@@ -220,155 +290,15 @@ bool lzw_compress(const char *data, DicCodeArray *compressed_data) {
     return true;
 }
 
-//region Dictionary functions
-//todo Dictionary to separete file
-void dictionary_free(Dictionary *dictionary) {
-    for (size_t i = 0; i < dictionary->length; ++i) {
-        TRACKED_FREE(dictionary->dictionary_array[i].value);
-    }
-
-    TRACKED_FREE(dictionary->dictionary_array);
-}
-
-DicCodeType dictionary_get_code_to_value(const Dictionary *dictionary, const DicValueType value) {
-    DicCodeType code = DIC_CODE_INVALID;
-
+static bool lzw_decompress(const DicCodeArray compressed_data, DicValueArray *ptr_decompressed_data) {
     //Check if data is not null
-    if (!dictionary || !value) {
-        LOG_MESSAGE(ERROR, "Error: Data is NULL.\n");
-        return code;
-    }
-
-    for (int i = 0; i < dictionary->length; ++i) {
-        DicValueType current_value = dictionary->dictionary_array[i].value;
-        if (strcmp((char *) current_value, (char *) value) == 0) {
-            code = dictionary->dictionary_array[i].code;
-            return code;
-        }
-    }
-
-    return code;
-}
-
-DicValueType dictionary_get_value_to_code(const Dictionary *dictionary, const DicCodeType code) {
-    DicValueType value = DIC_VALUE_INVALID;
-
-    //Check if data is not null
-    if (!dictionary || !code) {
-        LOG_MESSAGE(ERROR, "Error: Data is NULL.\n");
-        return value;
-    }
-
-    //estimate
-    DicCodeType current_code = dictionary->dictionary_array[code].code;
-    if (current_code == code) {
-        value = dictionary->dictionary_array[code].value;
-        return value;
-    }
-
-
-    for (int i = 0; i < dictionary->length; ++i) {
-        DicCodeType current_value = dictionary->dictionary_array[i].code;
-        if (current_value == code) {
-            value = dictionary->dictionary_array[i].value;
-            return value;
-        }
-    }
-
-    return value;
-}
-
-bool dictionary_add_entry(Dictionary *dictionary, const DictionaryEntry entry) {
-    //if value doesnt fit
-    if (dictionary->length == dictionary->capacity) {
-        size_t new_capacity = dictionary->capacity + DIC_ARR_INC;
-
-        DictionaryEntry *temp_ptr = realloc(dictionary->dictionary_array, new_capacity * sizeof(DictionaryEntry));
-        if (temp_ptr == NULL) {
-            LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
-            TRACKED_FREE(temp_ptr);
-            dictionary->dictionary_array = NULL;
-
-            return false; // Memory allocation failed
-        }
-
-        dictionary->dictionary_array = temp_ptr;
-        dictionary->capacity = new_capacity;
-        temp_ptr = NULL;
-    }
-
-    dictionary->dictionary_array[dictionary->length++] = entry;
-
-    return true;
-}
-
-bool dicvaluearray_add_element(DicValueArray *dic_value_array, const DicValueType element) {
-    // If array is full, increase capacity
-    if (dic_value_array->length == dic_value_array->capacity) {
-        size_t new_capacity = dic_value_array->capacity + DIC_ARR_INC;
-
-        DicValueType *temp_ptr = realloc(dic_value_array->array, new_capacity * sizeof(DicValueType));
-        if (temp_ptr == NULL) {
-            LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
-            TRACKED_FREE(temp_ptr);
-            dic_value_array->array = NULL;
-
-            return false; // Memory allocation failed
-        }
-
-        dic_value_array->array = temp_ptr;
-        dic_value_array->capacity = new_capacity;
-        temp_ptr = NULL;
-    }
-
-    dic_value_array->array[dic_value_array->length++] = element;
-
-    return true;
-}
-
-bool dictionary_init(Dictionary *dictionary) {
-    (*dictionary).dictionary_array = (DictionaryEntry *) TRACKED_MALLOC(
-            INITIAL_DICTIONARY_SIZE * sizeof(DictionaryEntry));
-    (*dictionary).length = 0;
-    (*dictionary).capacity = INITIAL_DICTIONARY_SIZE;
-
-    for (size_t i = 0; i < INITIAL_DICTIONARY_SIZE; ++i) {
-        (*dictionary).dictionary_array[i].code = (DicCodeType) i;
-
-        // Save i to char*
-        (*dictionary).dictionary_array[i].value = TRACKED_MALLOC(CALC_STR_MEM_SIZE(1));
-        if (!(*dictionary).dictionary_array[i].value) {
-            LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
-            dictionary_free(dictionary);
-            return false;
-        }
-
-        // Copy i to char*
-        int result = snprintf((char *) (*dictionary).dictionary_array[i].value, CALC_STR_SIZE(1), "%c", (char) i);
-        if (result < 0) {
-            LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
-            dictionary_free(dictionary);
-            return false;
-        }
-
-        //because ascii is 0-255
-    }
-
-    return true;
-}
-//endregion
-
-//NOT DONE___________________________________________________________________________________________________________
-
-bool lzw_decompress(const DicCodeArray *compressed_data, DicValueArray *decompressed_data) {
-    //Check if data is not null
-    if (!compressed_data || !decompressed_data) {
+    if (!compressed_data.array || !ptr_decompressed_data->array) {
         LOG_MESSAGE(ERROR, "Error: Data is NULL.\n");
         return false;
     }
 
     //Check if data is not empty
-    if (compressed_data->array[0] == STRING_NULL_TERMINATOR) {
+    if (compressed_data.array[0] == STRING_NULL_TERMINATOR) {
         LOG_MESSAGE(ERROR, "Error: Data is empty.\n");
         return false;
     }
@@ -377,7 +307,7 @@ bool lzw_decompress(const DicCodeArray *compressed_data, DicValueArray *decompre
     void *temp_ptr = NULL;
 
     //estimate of decompressed data size
-    size_t result_capacity = (size_t) ((double) compressed_data->length / LZW_COMPRESSION_RATE);
+    size_t result_capacity = (size_t) ((double) compressed_data.length / LZW_COMPRESSION_RATE);
 
     DicValueArray result_data;
     result_data.capacity = result_capacity;
@@ -394,12 +324,12 @@ bool lzw_decompress(const DicCodeArray *compressed_data, DicValueArray *decompre
     //endregion
 
     //region LZW OLD = first input code
-    DicCodeType old_code = compressed_data->array[0];
+    DicCodeType old_code = compressed_data.array[0];
     //endregion
 
     //region LZW save to result translation of OLD
     DicValueType old_value = dictionary_get_value_to_code(&dictionary, old_code);
-    if (old_value == DIC_VALUE_INVALID) {
+    if (is_value_invalid(old_value)) {
         LOG_MESSAGE(ERROR, "Error: Code not found in dictionary.\n");
         return false;
     }
@@ -413,26 +343,37 @@ bool lzw_decompress(const DicCodeArray *compressed_data, DicValueArray *decompre
 
     //LZW WHILE not end of input stream
 
-    for (size_t i = 1; i < compressed_data->length; ++i) {
+    for (size_t i = 1; i < compressed_data.length; ++i) {
 
         char c_value;
         DicValueType s_value;
         DicCodeType new_code;
 
+        //old_value find
+        old_value = dictionary_get_value_to_code(&dictionary, old_code);
+        if (is_value_invalid(old_value)) {
+            LOG_MESSAGE(ERROR, "Error: Code not found in dictionary.\n");
+            return false;
+        }
+
         //region LZW NEW = next input code
-        new_code = compressed_data->array[i];
+        new_code = compressed_data.array[i];
         //endregion
 
         //region LZW IF NEW is not in the string table
         DicValueType new_value = dictionary_get_value_to_code(&dictionary, new_code);
-        if (new_value == DIC_VALUE_INVALID) {
+        if (is_value_invalid(new_value)) {
 
             //region LZW S = translation of OLD
-            s_value = dictionary_get_value_to_code(&dictionary, old_code);
-            if (s_value == DIC_VALUE_INVALID) {
-                LOG_MESSAGE(ERROR, "Error: Code not found in dictionary.\n");
+            size_t length = strlen((char *) old_value);
+            s_value = TRACKED_MALLOC(CALC_STR_MEM_SIZE(length));
+            if (s_value == NULL) {
+                LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+                TRACKED_FREE(s_value);
+                s_value = NULL;
                 return false;
             }
+            strcpy((char *)s_value, (char *)old_value);
             //endregion
 
             //region LZW S = S + C
@@ -483,37 +424,63 @@ bool lzw_decompress(const DicCodeArray *compressed_data, DicValueArray *decompre
             //endregion
         }
 
-        //________________________________________________________--------------
-
-        //region LZW add OLD + first character of NEW to the string table
-        DicValueType combined_value = TRACKED_MALLOC(CALC_STR_MEM_SIZE(2));
-        if (!combined_value) {
-            LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
-            return false;
-        }
-        result = snprintf((char *) combined_value, CALC_STR_SIZE(2), "%s%c", old_value, new_value[0]);
-        if (result < 0) {
-            LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
-            TRACKED_FREE(combined_value);
-            return false;
-        }
-
-        DictionaryEntry entry = {dictionary.length, combined_value};
-        is_succes = dictionary_add_entry(&dictionary, entry);
+        //region LZW save to result S
+        is_succes = dicvaluearray_add_element(&result_data, s_value);
         if (!is_succes) {
             LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
             return false;
         }
         //endregion
 
+        //region LZW C = first character of S
+        c_value = (char) s_value[0];
+        //endregion
+
+        //region LZW OLD_value + C to the string table
+        size_t combine_oldc_length = strlen((char *) old_value) + 1;
+
+        //var new size
+        DicValueType combine_oldc = TRACKED_MALLOC(CALC_STR_MEM_SIZE(combine_oldc_length));
+        if (combine_oldc == NULL) {
+            LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+            TRACKED_FREE(combine_oldc);
+            combine_oldc = NULL;
+            return false;
+        }
+
+        //var = old + c
+        result = snprintf((char *) combine_oldc, CALC_STR_SIZE(combine_oldc_length), "%s%c", old_value, c_value);
+        if (result < 0) {
+            LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+            TRACKED_FREE(combine_oldc);
+            combine_oldc = NULL;
+            return false;
+        }
+
+        //save to dictionary
+        DictionaryEntry entry = {dictionary.length, combine_oldc};
+        is_succes = dictionary_add_entry(&dictionary, entry);
+        if (!is_succes) {
+            LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+            return false;
+        }
+
+        //endregion
+
+        //region LZW OLD = NEW
+        //endregion
+
         //region LZW OLD = NEW
         old_code = new_code;
-        old_value = new_value;
         //endregion
 
     }
 
     //endregion
 
+    return true;
 
 }
+//endregion
+
+//endregion

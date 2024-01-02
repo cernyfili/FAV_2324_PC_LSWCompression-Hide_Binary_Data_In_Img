@@ -23,3 +23,4 @@
 - [ ] prepsat vsude TRACKED_FREE aby se pointer nastavil na null a predavat s &
 - [ ] make static all private functions
 - [ ] check malloc and free if used my functions
+- [ ] check if all varables are freed when error

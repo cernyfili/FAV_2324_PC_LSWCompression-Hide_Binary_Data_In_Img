@@ -1,0 +1,21 @@
+ADD STRINGS TOGETHER
+//var new size
+size_t new_length = 1;//char is size of one
+temp_ptr = realloc(p_input_char, CALC_STR_MEM_SIZE(new_length));
+if (temp_ptr == NULL) {
+    LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+    TRACKED_FREE(p_input_char);
+    p_input_char = NULL;
+    return false;
+}
+p_input_char = temp_ptr;
+temp_ptr = NULL;
+
+//var set values
+result = snprintf((char *) p_input_char, CALC_STR_SIZE(new_length), "%c", c_next_char);
+if (result < 0) {
+    LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+    TRACKED_FREE(p_input_char);
+    p_input_char = NULL;
+    return false;
+}

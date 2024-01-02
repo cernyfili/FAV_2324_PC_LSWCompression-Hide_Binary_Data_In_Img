@@ -12,9 +12,10 @@
 #include <stdbool.h>
 
 #define TRACKED_MALLOC(size) tracked_malloc(size, __FILE__, __LINE__)
-#define TRACKED_FREE(ptr) tracked_free(ptr, __FILE__, __LINE__)
+#define TRACKED_FREE(ptr) tracked_free_null( (void **) &( ptr ), __FILE__, __LINE__)
 
 void* tracked_malloc(size_t size, const char* file, int line);
 void tracked_free(void* ptr, const char* file, int line);
+void tracked_free_null(void** ptr, const char* file, int line);
 
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_MEMORY_MANAGEMENT_H
