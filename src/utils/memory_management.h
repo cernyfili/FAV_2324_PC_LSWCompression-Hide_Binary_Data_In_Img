@@ -17,5 +17,6 @@
 void* tracked_malloc(size_t size, const char* file, int line);
 void tracked_free(void* ptr, const char* file, int line);
 void tracked_free_null(void** ptr, const char* file, int line);
+void memory_management_report();
 
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_MEMORY_MANAGEMENT_H

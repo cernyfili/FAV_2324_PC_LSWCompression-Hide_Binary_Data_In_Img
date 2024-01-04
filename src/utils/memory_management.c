@@ -45,7 +45,8 @@ void tracked_free(void* ptr, const char* file, int line) {
             allocations[i].is_deallocated = true;
             free(ptr);
             // Record deallocation information
-            log_message(INFO, allocations[i].file, allocations[i].line, "Freeing memory allocated in %s at line %d\n", allocations[i].file, allocations[i].line);
+            /*log_message(INFO, allocations[i].file, allocations[i].line, "Freeing memory allocated in %s at line %d\n", allocations[i].file, allocations[i].line);*/
+            LOG_MESSAGE(INFO, "Freeing memory allocated in %s at line %d\n", allocations[i].file, allocations[i].line);
             return;
         }
     }
@@ -58,5 +59,13 @@ void tracked_free_null(void** ptr, const char* file, int line) {
     if (*ptr != NULL) {
         tracked_free(*ptr, file, line);
         *ptr = NULL;
+    }
+}
+
+void memory_management_report(){
+    for (int i = 0; i < allocationCount; ++i) {
+        if (!allocations[i].is_deallocated) {
+            LOG_MESSAGE(WARNING, "Memory leak detected in %s at line %d\n", allocations[i].file, allocations[i].line);
+        }
     }
 }

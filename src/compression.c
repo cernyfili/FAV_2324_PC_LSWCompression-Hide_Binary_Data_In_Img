@@ -43,7 +43,6 @@ static bool lzw_decompress(DicCodeArray compressed_data, DicValueArray *ptr_deco
 //region PUBLIC FUNCTIONS
 bool compress_payload(const PayloadArray data, PayloadArray *ptr_compressed_data){
     void* temp_ptr;
-    int result;
 
     // Convert data to char array
     char* lzw_data = (char*)data.array;
@@ -74,7 +73,7 @@ bool compress_payload(const PayloadArray data, PayloadArray *ptr_compressed_data
     ptr_compressed_data->length = (size_t)((double)lzw_compressed_data.length * (sizeof(DicCodeType) / (double) sizeof(PayloadType)));
 
     size_t size = ptr_compressed_data->length * sizeof(PayloadType);
-    ptr_compressed_data->array = (PayloadType *)TRACKED_MALLOC(size);
+    ptr_compressed_data->array = TRACKED_MALLOC(size);
     if (!ptr_compressed_data->array) {
         LOG_MESSAGE(ERROR, "Error: Memory allocation failed.");
         return false;
@@ -106,8 +105,8 @@ bool decompress_payload(const PayloadArray compressed_data, PayloadArray *ptr_un
     }
 
     // Convert lzw_decompressed_data to PayloadArray
-    ptr_uncompressed_data->length = lzw_decompressed_data.length * (sizeof(DicValueType) / sizeof(PayloadType));
-    ptr_uncompressed_data->array = (PayloadType *)TRACKED_MALLOC(ptr_uncompressed_data->length * sizeof(PayloadType));
+    ptr_uncompressed_data->length =(size_t) ((double)lzw_decompressed_data.length * (sizeof(DicValueType) / (double)sizeof(PayloadType)));
+    ptr_uncompressed_data->array = TRACKED_MALLOC(ptr_uncompressed_data->length * sizeof(PayloadType));
     if (!ptr_uncompressed_data->array) {
         LOG_MESSAGE(ERROR, "Error: Memory allocation failed.");
         return false;
@@ -138,7 +137,7 @@ bool decompress_payload(const PayloadArray compressed_data, PayloadArray *ptr_un
  * @return
  */
 static bool lzw_compress(const char *data, DicCodeArray *compressed_data) {
-    if (!data) {
+    if (data == NULL) {
         LOG_MESSAGE(ERROR, "Error: Data is NULL.\n");
         return false;
     }
@@ -152,7 +151,7 @@ static bool lzw_compress(const char *data, DicCodeArray *compressed_data) {
     void *temp_ptr = NULL;
 
 
-    result_code = (DicCodeType *) TRACKED_MALLOC(result_capacity * sizeof(DicCodeType));
+    result_code = TRACKED_MALLOC(result_capacity * sizeof(DicCodeType));
     if (result_code == NULL) {
         LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
         TRACKED_FREE(result_code);
@@ -185,8 +184,6 @@ static bool lzw_compress(const char *data, DicCodeArray *compressed_data) {
     for (size_t i = 1; i < data_size; ++i) {
         //C_NEXT_CHAR = next input character
         char c_next_char = data[i];
-
-        //todo make is in dictionary function
 
         // P_INPUT_CHAR + C_NEXT_CHAR
         size_t length = strlen((char *) p_input_char) + 1;
@@ -240,6 +237,10 @@ static bool lzw_compress(const char *data, DicCodeArray *compressed_data) {
             //LZW add P_INPUT_CHAR + C_NEXT_CHAR to the string table
             DictionaryEntry entry = {next_dic_code++, combined_pc};
             bool is_succes = dictionary_add_entry(&dictionary, entry);
+            if (!is_succes) {
+                LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+                return false;
+            }
 
             //LZW P_INPUT_CHAR = C_NEXT_CHAR
             //p_input_char new size
@@ -272,7 +273,7 @@ static bool lzw_compress(const char *data, DicCodeArray *compressed_data) {
 
     // Create a new array to store the compressed result
     compressed_data->length = result_length;
-    compressed_data->array = (DicCodeType *) TRACKED_MALLOC(compressed_data->length * sizeof(DicCodeType));
+    compressed_data->array = TRACKED_MALLOC(compressed_data->length * sizeof(DicCodeType));
     if (compressed_data->array == NULL) {
         LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
         TRACKED_FREE(result_code);
@@ -340,13 +341,13 @@ static bool lzw_decompress(const DicCodeArray compressed_data, DicValueArray *pt
     }
 
     //endregion
+    char c_value = STRING_NULL_TERMINATOR;
+    DicValueType s_value = NULL;
 
     //LZW WHILE not end of input stream
 
     for (size_t i = 1; i < compressed_data.length; ++i) {
 
-        char c_value;
-        DicValueType s_value;
         DicCodeType new_code;
 
         //old_value find
@@ -377,41 +378,53 @@ static bool lzw_decompress(const DicCodeArray compressed_data, DicValueArray *pt
             //endregion
 
             //region LZW S = S + C
-            size_t combine_sc_length = strlen((char *) s_value) + 1;
+            if (c_value != STRING_NULL_TERMINATOR) {
+                size_t combine_sc_length = strlen((char *) s_value) + 1;
 
-            //s_value new size
-            temp_ptr = realloc(s_value, CALC_STR_MEM_SIZE(combine_sc_length));
-            if (temp_ptr == NULL) {
-                LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
-                TRACKED_FREE(s_value);
-                s_value = NULL;
-                return false;
-            }
-            s_value = temp_ptr;
-            temp_ptr = NULL;
+                //s_value new size
+                temp_ptr = realloc(s_value, CALC_STR_MEM_SIZE(combine_sc_length));
+                if (temp_ptr == NULL) {
+                    LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+                    TRACKED_FREE(s_value);
+                    s_value = NULL;
+                    return false;
+                }
+                s_value = temp_ptr;
+                temp_ptr = NULL;
 
-            //s_value = s + c
-            result = snprintf((char *) s_value, CALC_STR_SIZE(combine_sc_length), "%s%c", s_value, c_value);
-            if (result < 0) {
-                LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
-                TRACKED_FREE(s_value);
-                s_value = NULL;
-                return false;
+                //s_value = s + c
+                result = snprintf((char *) s_value, CALC_STR_SIZE(combine_sc_length), "%s%c", s_value, c_value);
+                if (result < 0) {
+                    LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+                    TRACKED_FREE(s_value);
+                    s_value = NULL;
+                    return false;
+                }
             }
             //endregion
         } else {
             //region LZW S = translation of NEW
             //s_value new size
             size_t new_length = strlen((char *)new_value);
-            temp_ptr = realloc(s_value, CALC_STR_MEM_SIZE(new_length));
-            if (temp_ptr == NULL) {
-                LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
-                TRACKED_FREE(s_value);
-                s_value = NULL;
-                return false;
+
+            if(s_value == NULL){
+                s_value = TRACKED_MALLOC(CALC_STR_MEM_SIZE(new_length));
+                if (s_value == NULL) {
+                    LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+                    TRACKED_FREE(s_value);
+                    return false;
+                }
+            } else {
+                temp_ptr = realloc(s_value, CALC_STR_MEM_SIZE(new_length));
+                if (temp_ptr == NULL) {
+                    LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
+                    TRACKED_FREE(s_value);
+                    s_value = NULL;
+                    return false;
+                }
+                s_value = temp_ptr;
+                temp_ptr = NULL;
             }
-            s_value = temp_ptr;
-            temp_ptr = NULL;
 
             //s_value = new_value
             result = snprintf((char *) s_value, CALC_STR_SIZE(new_length), "%s", new_value);

@@ -76,19 +76,37 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/compression.c">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/compression.h">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/image.c">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/image.h">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
 		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/main.c">
 			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
 		</Unit>
-		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/payload_prepare.c">
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/payload.c">
 			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
 		</Unit>
-		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/payload_prepare.h">
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/payload.h">
 			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
 		</Unit>
 		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/data_structures.c">
 			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
 		</Unit>
 		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/data_structures.h">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/dictionary.c">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/dictionary.h">
 			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
 		</Unit>
 		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/logger.c">

@@ -2,25 +2,35 @@
 - [X] malloc functions - counter
 - [X] png reader - fix libpng
 - [X] bmp reader
-- [ ] lzw compression
-- [ ] extract bmp
-- [ ] save payload after extract
-- [ ] payload prepare
-- [ ] payload encrypt
-- 
+- [X] lzw compression
+- [X] extract bmp
+- [X] save payload after extract
+- [X] payload prepare
+- [X] payload encrypt
+- [X] return right error codes
+  - [X] hide_png 
+  - [X] hide - file not existing 1
+  - [X] prepare payload data
+- [ ] TESTING
+  - [X] temp file for hiding
+  - [ ] wrong saving payload to image - image corupted
+    - [ ] change exclude_bmp same as hide_bmp
+- [ ] MEMORY LEAKS
 
 **Secondary**
 - [ ] check array types (vice omezeni)
+- [ ] warinings resolve
 - [ ] sanity check all functions
 - [ ] komentare funkce
 - [ ] struktura souboru jednotna
 - [ ] prepsat vse na @brief
-- [ ] zjistit jestli is_succes check je dobry napad
+- [X] zjistit jestli is_succes check je dobry napad
 - [ ] zlepsit logovani chyb - at neni vsude
-- [ ] sjednotit result nebo is_succes
+- [X] sjednotit result nebo is_succes
 - [ ] odstranit printf
 - [ ] odstranit magicke promenne
-- [ ] prepsat vsude TRACKED_FREE aby se pointer nastavil na null a predavat s &
+- [X] prepsat vsude TRACKED_FREE aby se pointer nastavil na null a predavat s &
 - [ ] make static all private functions
 - [ ] check malloc and free if used my functions
 - [ ] check if all varables are freed when error
+- [ ] dynamic array to separete file

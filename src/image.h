@@ -5,12 +5,13 @@
 //
 
 #include <stdbool.h>
+#include "utils/data_structures.h"
 
 #ifndef FAV_PC_SP_23_24_BINARYDATAINIMG_IMAGE_H
 #define FAV_PC_SP_23_24_BINARYDATAINIMG_IMAGE_H
 
 
-
+#define NUM_COLOR_PIXEL 3
 
 /**
  * Extracts binary data from the least significant bit (LSB) of each RGB value in a BMP file.
@@ -19,7 +20,7 @@
  * @param output_filepath
  * @return
  */
-bool hide_data_lsb(const char *input_filepath, const PayloadArray hide_data,
+int hide_data_lsb(const char *input_filepath, const PayloadArray hide_data,
                    const char *output_filepath);
 
 /**
@@ -28,7 +29,7 @@ bool hide_data_lsb(const char *input_filepath, const PayloadArray hide_data,
  * @param ptr_hidden_data
  * @return
  */
-bool extract_data_lsb(const char *input_image_filepath, PayloadArray *ptr_hidden_data);
+int extract_data_lsb(const char *input_image_filepath, PayloadArray *ptr_hidden_data);
 
 
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_IMAGE_H

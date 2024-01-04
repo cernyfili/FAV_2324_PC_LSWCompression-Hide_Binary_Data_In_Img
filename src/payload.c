@@ -184,7 +184,7 @@ static bool get_array_from_payload_file(const char *filename, PayloadArray *ptr_
     // Open the file
     FILE *file = fopen(filename, "rb");
     if (!file) {
-        LOG_MESSAGE(ERROR, "Error: Unable to open or read file %s.", filename);
+        LOG_MESSAGE(ERROR, "Error: Unable to open or read file %s", filename);
         return false;
     }
 
@@ -195,7 +195,7 @@ static bool get_array_from_payload_file(const char *filename, PayloadArray *ptr_
 
     // Allocate memory for the output array
     ptr_output->length = (size_t) ((double) file_size_bytes * (1 / (double) sizeof(PayloadType)));
-    ptr_output->array = (PayloadType *) TRACKED_MALLOC(ptr_output->length * sizeof(PayloadType));
+    ptr_output->array = TRACKED_MALLOC(ptr_output->length * sizeof(PayloadType));
     if (!ptr_output->array) {
         TRACKED_FREE(ptr_output->array);
         fclose(file);

@@ -129,6 +129,54 @@ FAV_PC_SP_23_24_BinaryDataInImg/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build
 .PHONY : FAV_PC_SP_23_24_BinaryDataInImg/fast
 
+src/compression.o: src/compression.c.o
+.PHONY : src/compression.o
+
+# target to build an object file
+src/compression.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compression.c.o
+.PHONY : src/compression.c.o
+
+src/compression.i: src/compression.c.i
+.PHONY : src/compression.i
+
+# target to preprocess a source file
+src/compression.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compression.c.i
+.PHONY : src/compression.c.i
+
+src/compression.s: src/compression.c.s
+.PHONY : src/compression.s
+
+# target to generate assembly for a file
+src/compression.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compression.c.s
+.PHONY : src/compression.c.s
+
+src/image.o: src/image.c.o
+.PHONY : src/image.o
+
+# target to build an object file
+src/image.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o
+.PHONY : src/image.c.o
+
+src/image.i: src/image.c.i
+.PHONY : src/image.i
+
+# target to preprocess a source file
+src/image.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.i
+.PHONY : src/image.c.i
+
+src/image.s: src/image.c.s
+.PHONY : src/image.s
+
+# target to generate assembly for a file
+src/image.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.s
+.PHONY : src/image.c.s
+
 src/main.o: src/main.c.o
 .PHONY : src/main.o
 
@@ -153,29 +201,29 @@ src/main.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.s
 .PHONY : src/main.c.s
 
-src/payload_prepare.o: src/payload_prepare.c.o
-.PHONY : src/payload_prepare.o
+src/payload.o: src/payload.c.o
+.PHONY : src/payload.o
 
 # target to build an object file
-src/payload_prepare.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload_prepare.c.o
-.PHONY : src/payload_prepare.c.o
+src/payload.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload.c.o
+.PHONY : src/payload.c.o
 
-src/payload_prepare.i: src/payload_prepare.c.i
-.PHONY : src/payload_prepare.i
+src/payload.i: src/payload.c.i
+.PHONY : src/payload.i
 
 # target to preprocess a source file
-src/payload_prepare.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload_prepare.c.i
-.PHONY : src/payload_prepare.c.i
+src/payload.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload.c.i
+.PHONY : src/payload.c.i
 
-src/payload_prepare.s: src/payload_prepare.c.s
-.PHONY : src/payload_prepare.s
+src/payload.s: src/payload.c.s
+.PHONY : src/payload.s
 
 # target to generate assembly for a file
-src/payload_prepare.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload_prepare.c.s
-.PHONY : src/payload_prepare.c.s
+src/payload.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload.c.s
+.PHONY : src/payload.c.s
 
 src/utils/data_structures.o: src/utils/data_structures.c.o
 .PHONY : src/utils/data_structures.o
@@ -200,6 +248,30 @@ src/utils/data_structures.s: src/utils/data_structures.c.s
 src/utils/data_structures.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/data_structures.c.s
 .PHONY : src/utils/data_structures.c.s
+
+src/utils/dictionary.o: src/utils/dictionary.c.o
+.PHONY : src/utils/dictionary.o
+
+# target to build an object file
+src/utils/dictionary.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/dictionary.c.o
+.PHONY : src/utils/dictionary.c.o
+
+src/utils/dictionary.i: src/utils/dictionary.c.i
+.PHONY : src/utils/dictionary.i
+
+# target to preprocess a source file
+src/utils/dictionary.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/dictionary.c.i
+.PHONY : src/utils/dictionary.c.i
+
+src/utils/dictionary.s: src/utils/dictionary.c.s
+.PHONY : src/utils/dictionary.s
+
+# target to generate assembly for a file
+src/utils/dictionary.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/dictionary.c.s
+.PHONY : src/utils/dictionary.c.s
 
 src/utils/logger.o: src/utils/logger.c.o
 .PHONY : src/utils/logger.o
@@ -258,15 +330,24 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... FAV_PC_SP_23_24_BinaryDataInImg"
+	@echo "... src/compression.o"
+	@echo "... src/compression.i"
+	@echo "... src/compression.s"
+	@echo "... src/image.o"
+	@echo "... src/image.i"
+	@echo "... src/image.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
-	@echo "... src/payload_prepare.o"
-	@echo "... src/payload_prepare.i"
-	@echo "... src/payload_prepare.s"
+	@echo "... src/payload.o"
+	@echo "... src/payload.i"
+	@echo "... src/payload.s"
 	@echo "... src/utils/data_structures.o"
 	@echo "... src/utils/data_structures.i"
 	@echo "... src/utils/data_structures.s"
+	@echo "... src/utils/dictionary.o"
+	@echo "... src/utils/dictionary.i"
+	@echo "... src/utils/dictionary.s"
 	@echo "... src/utils/logger.o"
 	@echo "... src/utils/logger.i"
 	@echo "... src/utils/logger.s"

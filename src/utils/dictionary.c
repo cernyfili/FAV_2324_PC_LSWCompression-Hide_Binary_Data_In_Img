@@ -30,7 +30,7 @@
 //endregion
 
 //region FUNCTIONS DECLARATION
-bool dynamicarray_add_element(DynamicArray *dynamic_array, void* element, const size_t element_size);
+
 //endregion
 
 //region FUNCTIONS DEFINITIONS
@@ -44,7 +44,7 @@ void dictionary_free(Dictionary *dictionary) {
     TRACKED_FREE(dictionary->dictionary_array);
 }
 
-DicCodeType dictionary_get_code_to_value(const Dictionary *dictionary, const DicValueType value) {
+DicCodeType dictionary_get_code_to_value(const Dictionary *dictionary,  DicValueType value) {
     DicCodeType code = DIC_CODE_INVALID;
 
     //Check if data is not null
@@ -118,7 +118,7 @@ bool dictionary_add_entry(Dictionary *dictionary, const DictionaryEntry entry) {
     return dynamicarray_add_element((DynamicArray *) dictionary, (void *) &entry, sizeof(DictionaryEntry));
 }
 
-bool dicvaluearray_add_element(DicValueArray *dic_value_array, const DicValueType element) {
+bool dicvaluearray_add_element(DicValueArray *dic_value_array, DicValueType element) {
     /*// If array is full, increase capacity
     if (dic_value_array->length == dic_value_array->capacity) {
         size_t new_capacity = dic_value_array->capacity + DIC_ARR_INC;
@@ -144,7 +144,7 @@ bool dicvaluearray_add_element(DicValueArray *dic_value_array, const DicValueTyp
     return dynamicarray_add_element((DynamicArray *) dic_value_array, element, sizeof(DicValueType));
 }
 
-bool dynamicarray_add_element(DynamicArray *dynamic_array, void* element, const size_t element_size) {
+bool dynamicarray_add_element(DynamicArray *dynamic_array, void* element, size_t element_size) {
     //if value doesnt fit
     if (dynamic_array->length == dynamic_array->capacity) {
         size_t new_capacity = dynamic_array->capacity + DIC_ARR_INC;
@@ -170,7 +170,7 @@ bool dynamicarray_add_element(DynamicArray *dynamic_array, void* element, const 
 }
 
 bool dictionary_init(Dictionary *dictionary) {
-    (*dictionary).dictionary_array = (DictionaryEntry *) TRACKED_MALLOC(
+    (*dictionary).dictionary_array = TRACKED_MALLOC(
             INITIAL_DICTIONARY_SIZE * sizeof(DictionaryEntry));
     (*dictionary).length = 0;
     (*dictionary).capacity = INITIAL_DICTIONARY_SIZE;

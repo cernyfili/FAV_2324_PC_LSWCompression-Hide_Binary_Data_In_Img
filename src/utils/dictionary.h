@@ -57,10 +57,10 @@ DicValueType dictionary_get_value_to_code(const Dictionary *dictionary, const Di
 
 bool dicvaluearray_add_element(DicValueArray *dic_value_array, const DicValueType element);
 
-bool is_value_invalid(const const DicValueType value);
+bool is_value_invalid(DicValueType value);
 
 bool is_code_invalid(DicCodeType code);
 
-bool dynamicarray_add_element(DynamicArray *dynamic_array, void* element, const size_t element_size);
+bool dynamicarray_add_element(DynamicArray *dynamic_array, void* element, size_t element_size);
 
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_DICTIONARY_H
