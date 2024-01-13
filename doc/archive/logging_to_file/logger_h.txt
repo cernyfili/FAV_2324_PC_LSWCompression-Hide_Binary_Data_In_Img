@@ -47,4 +47,14 @@ typedef struct {
  */
 void log_message(LogLevel level, const char* file, int line, const char *format, ...);
 
+/**
+ * Initializes the logger, setting up any necessary resources or configurations.
+ */
+void create_logger_filepath(char **ptr_log_filepath);
+
+/**
+ * Frees any resources allocated or used by the logger during its lifecycle.
+ */
+void logger_free();
+
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_LOGGER_H

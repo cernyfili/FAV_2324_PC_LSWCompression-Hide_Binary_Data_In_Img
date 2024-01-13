@@ -1,0 +1,173 @@
+//
+// Author: Filip Cerny
+// Date: 24.11.2023
+// Description: This file contains logger functions.
+//
+
+#include "logger.h"
+#include "utils.h"
+
+#include <time.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <string.h>
+
+/**
+ * Represents whether the console logging is enabled.
+ */
+#define IS_CONSOLE_LOG_ENABLED true
+
+/**
+ * Represents whether the file logging is enabled.
+ */
+#define IS_FILE_LOG_ENABLED false
+
+#define LOG_FILENAME_POSTFIX "_logfile.txt"
+
+/**
+ * Represents the name of the log file.
+ */
+char** log_filepath = NULL;
+
+/**
+ * Array of log level info structs.
+ */
+const LogLevelInfo LogLevelInfoArray[] = {
+        {INFO, "INFO", false},
+        {WARNING, "WARNING", true},
+        {ERROR, "ERROR", true}
+};
+
+/**
+ * Initializes the logger by creating a log file with a unique name based on the current date.
+ * The log file is opened in append mode.
+ */
+void logger_init(char **ptr_log_filepath) {
+    time_t t;
+    struct tm *tm_info;
+    char date_string[20]; // Adjust the size based on your needs
+
+    time(&t);
+    tm_info = localtime(&t);
+
+    strftime(date_string, sizeof(date_string), "%Y-%m-%d", tm_info);
+
+    // Open the log file in append mode
+    char* postfix = LOG_FILENAME_POSTFIX;
+
+    char* log_filename = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen(date_string) + strlen(postfix) + 1));
+    if (!(log_filename)){
+        printf("Error opening log file\n");
+        return;
+    }
+    strcpy(log_filename, date_string);
+    strcat(log_filename, postfix);
+
+    char * prefix = "";
+    *ptr_log_filepath = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen(prefix) + strlen(log_filename)));
+    if (!(*ptr_log_filepath)){
+        printf("Error opening log file\n");
+        TRACKED_FREE(log_filename);
+        return;
+    }
+    strcpy(*ptr_log_filepath, prefix);
+    strcat(*ptr_log_filepath, log_filename);
+    FILE *log_file = fopen(*ptr_log_filepath, "w");
+
+    if (!log_file) {
+        printf("Error opening log file\n");
+        TRACKED_FREE(log_filename);
+        TRACKED_FREE(*ptr_log_filepath);
+        fclose(log_file);
+        return;
+    }
+
+    log_filepath = ptr_log_filepath;
+
+    TRACKED_FREE(log_filename);
+    // Close the log file
+    fclose(log_file);
+}
+
+/**
+ * Frees the memory allocated for the log file name.
+ */
+void logger_free() {
+    if (log_filepath == NULL){
+        return;
+    }
+    TRACKED_FREE(log_filepath);
+}
+
+
+/**
+ * Logs a formatted message with the specified log level, including file name and line number information.
+ * The format string and additional arguments follow the printf-style formatting.
+ *
+ * @param level Log level (INFO, WARNING, or ERROR).
+ * @param file File name where the log message is generated.
+ * @param line Line number where the log message is generated.
+ * @param format Format string for the log message.
+ * @param ... Additional arguments for the format string.
+ */
+void log_message(LogLevel level, const char* file, int line, const char *format, ...) {
+    if (!file){
+        printf("Error opening log file\n");
+        return;
+    }
+
+    if (log_filepath == NULL){
+        printf("Error opening log file\n");
+        return;
+    }
+
+    FILE *log_file = fopen(log_filepath, "a");
+    if (log_file == NULL) {
+        printf("Error opening log file\n");
+        return;
+    }
+    
+    bool is_console_log_enabled = IS_CONSOLE_LOG_ENABLED;
+    bool is_file_loge_enabled = IS_FILE_LOG_ENABLED;
+
+    // Log text for the given log level
+    for (size_t i = 0; i < sizeof(LogLevelInfoArray) / sizeof(LogLevelInfoArray[0]); ++i) {
+        if (level == LogLevelInfoArray[i].level && LogLevelInfoArray[i].is_enabled) {
+            // Log to console
+            if (is_console_log_enabled) {
+                printf("[%s] ", LogLevelInfoArray[i].string);
+            }
+
+            //Log to file
+            if (is_file_loge_enabled){
+                fprintf(log_file, "[%s] ", LogLevelInfoArray[i].string);
+            }
+
+            // Handle variadic arguments
+            va_list args;
+            va_start(args, format);
+
+            // Log to console
+            vprintf(format, args);
+            if (is_console_log_enabled) {
+                printf("\n File: \"%s:%d\"\n Line: %d\n", file, line, line);
+            }
+
+            // Log to file
+            vfprintf(log_file, format, args);
+            if (is_file_loge_enabled) {
+                fprintf(log_file, "\n File: %s\n Line: %d\n", file, line);
+            }
+
+            va_end(args);
+            break;
+        }
+    }
+
+
+
+    // Close the log file
+    fclose(log_file);
+}
+

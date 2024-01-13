@@ -225,6 +225,30 @@ src/payload.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload.c.s
 .PHONY : src/payload.c.s
 
+src/test/test_file.o: src/test/test_file.c.o
+.PHONY : src/test/test_file.o
+
+# target to build an object file
+src/test/test_file.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/test/test_file.c.o
+.PHONY : src/test/test_file.c.o
+
+src/test/test_file.i: src/test/test_file.c.i
+.PHONY : src/test/test_file.i
+
+# target to preprocess a source file
+src/test/test_file.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/test/test_file.c.i
+.PHONY : src/test/test_file.c.i
+
+src/test/test_file.s: src/test/test_file.c.s
+.PHONY : src/test/test_file.s
+
+# target to generate assembly for a file
+src/test/test_file.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/test/test_file.c.s
+.PHONY : src/test/test_file.c.s
+
 src/utils/data_structures.o: src/utils/data_structures.c.o
 .PHONY : src/utils/data_structures.o
 
@@ -321,6 +345,30 @@ src/utils/memory_management.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/memory_management.c.s
 .PHONY : src/utils/memory_management.c.s
 
+src/utils/utils.o: src/utils/utils.c.o
+.PHONY : src/utils/utils.o
+
+# target to build an object file
+src/utils/utils.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/utils.c.o
+.PHONY : src/utils/utils.c.o
+
+src/utils/utils.i: src/utils/utils.c.i
+.PHONY : src/utils/utils.i
+
+# target to preprocess a source file
+src/utils/utils.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/utils.c.i
+.PHONY : src/utils/utils.c.i
+
+src/utils/utils.s: src/utils/utils.c.s
+.PHONY : src/utils/utils.s
+
+# target to generate assembly for a file
+src/utils/utils.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/build.make CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/utils/utils.c.s
+.PHONY : src/utils/utils.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -342,6 +390,9 @@ help:
 	@echo "... src/payload.o"
 	@echo "... src/payload.i"
 	@echo "... src/payload.s"
+	@echo "... src/test/test_file.o"
+	@echo "... src/test/test_file.i"
+	@echo "... src/test/test_file.s"
 	@echo "... src/utils/data_structures.o"
 	@echo "... src/utils/data_structures.i"
 	@echo "... src/utils/data_structures.s"
@@ -354,6 +405,9 @@ help:
 	@echo "... src/utils/memory_management.o"
 	@echo "... src/utils/memory_management.i"
 	@echo "... src/utils/memory_management.s"
+	@echo "... src/utils/utils.o"
+	@echo "... src/utils/utils.i"
+	@echo "... src/utils/utils.s"
 .PHONY : help
 
 

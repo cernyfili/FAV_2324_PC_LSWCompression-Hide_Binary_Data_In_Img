@@ -12,7 +12,7 @@ p_input_char = temp_ptr;
 temp_ptr = NULL;
 
 //var set values
-result = snprintf((char *) p_input_char, CALC_STR_SIZE(new_length), "%c", c_next_char);
+result = snprintf((char *) p_input_char, STR_ADD_ONE(new_length), "%c", c_next_char);
 if (result < 0) {
     LOG_MESSAGE(ERROR, "Error: Memory allocation failed.\n");
     TRACKED_FREE(p_input_char);

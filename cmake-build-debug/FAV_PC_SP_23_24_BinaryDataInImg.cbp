@@ -97,6 +97,12 @@
 		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/payload.h">
 			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
 		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/test/test_file.c">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/test/test_file.h">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
 		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/data_structures.c">
 			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
 		</Unit>
@@ -119,6 +125,9 @@
 			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
 		</Unit>
 		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/memory_management.h">
+			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
+		</Unit>
+		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/utils.c">
 			<Option target="FAV_PC_SP_23_24_BinaryDataInImg"/>
 		</Unit>
 		<Unit filename="/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/utils.h">

@@ -1,0 +1,214 @@
+
+/**
+ * Function copies payload size from payload array to ptr_return_size
+ * @param input_image_filepath  The path to the input BMP file.
+ */
+void print_rgb_values(const char *input_image_filepath) {
+    printf("print_rgb_values\n");
+
+    //Check if the arguments are valid
+    if (!input_image_filepath) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return;
+    }
+    //Check if file exists
+    if (!file_exists(input_image_filepath)) {
+        LOG_MESSAGE(ERROR, "Input file does not exist.");
+        return;
+    }
+
+    FILE *input_file = fopen(input_image_filepath, "rb");
+
+    // Check if the file was opened successfully
+    if (!input_file) {
+        // Unable to open file
+        LOG_MESSAGE(ERROR, "Unable to open file.");
+
+        // Close the files
+        fclose(input_file);
+
+        return;
+    }
+
+    //read BMP metadata
+    BmpMetadata bmp_metadata;
+    bool is_success = read_bmp_metadata(input_file, &bmp_metadata);
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Cannot read BMP metadata.");
+        fclose(input_file);
+        return;
+    }
+
+    // Check if the input file is a BMP file
+    if (bmp_metadata.signature != BMP_SIGNATURE) {
+        LOG_MESSAGE(ERROR, "Input file is not a BMP file.");
+
+        // Close the files
+        fclose(input_file);
+
+        return;
+    }
+
+    // Check if it's a 24-bit uncompressed BMP file
+    if (bmp_metadata.bitcount != RGB_BIT_SIZE) {
+        LOG_MESSAGE(ERROR, "Input file is not 24 bit RGB BMP file or there is compression.");
+
+        // Close the files
+        fclose(input_file);
+
+        return;
+    }
+
+
+    // Move to the start of pixel data - after only editing the color value
+    fseek(input_file, bmp_metadata.dataoffset, SEEK_SET);
+
+    //create array for one row
+    int bytes_per_row = (int) ((double) bmp_metadata.width * (double) NUM_COLOR_PIXEL);
+    ColorValueType *row_array = TRACKED_MALLOC(bytes_per_row * sizeof(ColorValueType));
+    if (!row_array) {
+        LOG_MESSAGE(ERROR, "Cannot allocate memory for row array");
+        return;
+    }
+
+    //vars for bitshifts
+    size_t payload_array_index = 0;
+
+    for (int y = 0; y < bmp_metadata.height; y++) {
+        if (payload_array_index >= (size_t) (10.0 * 8.0)) {
+            break;
+        }
+        printf("\n");
+        printf("row %d\n", y);
+        printf("\n");
+
+        for (int i = 0; i < bmp_metadata.width; ++i) {
+            if (payload_array_index >= (size_t) (10.0 * 8.0)) {
+                break;
+            }
+            ColorValueType blue_value;
+            fread(&blue_value, sizeof(ColorValueType), 1, input_file);
+            ColorValueType green_value;
+            fread(&green_value, sizeof(ColorValueType), 1, input_file);
+            ColorValueType red_value;
+            fread(&red_value, sizeof(ColorValueType), 1, input_file);
+            /*if (blue_value != 255){
+                printf( "blue: %d, green: %d, red: %d\n", blue_value, green_value, red_value);
+            }*/
+            /*printf( "blue: %d, green: %d, red: %d\n", blue_value, green_value, red_value);*/
+            if (blue_value == 255) {
+                printf("1");
+            }
+            if (blue_value == 254) {
+                printf("0");
+            }
+            /*printf(" %d ", blue_value);*/
+            payload_array_index++;
+        }
+    }
+
+
+    fclose(input_file);
+    TRACKED_FREE(row_array);
+}
+
+
+
+
+/**
+ * Prints the contents of a PayloadArray.
+ *
+ * @param payloadArray The PayloadArray to be printed.
+ * @return True if the printing process is successful, false otherwise.
+ */
+bool payloadarray_print(PayloadArray payloadArray) {
+    if (payloadArray.length == 0) {
+        LOG_MESSAGE(ERROR, "PayloadArray is empty!");
+        return false;
+    }
+    if (payloadArray.array == NULL) {
+        LOG_MESSAGE(ERROR, "PayloadArray is NULL!");
+        return false;
+    }
+
+    printf("PayloadArray: \n");
+    printf("length: %zu\n", payloadArray.length);
+    printf("capacity: %zu\n", payloadArray.capacity);
+    for (int i = 0; i < payloadArray.length; ++i) {
+        printf("value: %c\n", payloadArray.array[i]);
+    }
+    return true;
+}
+
+
+
+
+/**
+ * Prints the contents of the dictionary, including codes and values.
+ *
+ * @param dictionary Pointer to the dictionary to be printed.
+ * @return true if the printing is successful, false otherwise.
+ */
+bool dictionary_print(Dictionary dictionary) {
+    //Check if data is not null
+    if (!dictionary.array) {
+        LOG_MESSAGE(ERROR, "Data is NULL.");
+        return false;
+    }
+
+    printf("Dictionary:\n");
+    for (int i = 0; i < dictionary.length; ++i) {
+        printf("%d: %s\n", dictionary.array[i].code, dictionary.array[i].value);
+    }
+
+    return true;
+}
+
+
+
+/**
+ * Initializes the logger by creating a log file with a unique name based on the current date.
+ * The log file is opened in append mode.
+ */
+static bool create_logger_filepath(const char* prefix, const char* postfix, char **ptr_log_filepath) {
+    time_t t;
+    struct tm *tm_info;
+    char date_string[20]; // Adjust the size based on your needs
+
+    time(&t);
+    tm_info = localtime(&t);
+
+    strftime(date_string, sizeof(date_string), "%Y-%m-%d", tm_info);
+
+    // Open the log file in append mode
+
+    char* log_filename = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen(date_string) + strlen(postfix) + 1));
+    if (!(log_filename)){
+        printf("Error opening log file\n");
+        return;
+    }
+    strcpy(log_filename, date_string);
+    strcat(log_filename, postfix);
+
+    *ptr_log_filepath = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen(prefix) + strlen(log_filename)));
+    if (!(*ptr_log_filepath)){
+        printf("Error opening log file\n");
+        TRACKED_FREE(log_filename);
+        return;
+    }
+    strcpy(*ptr_log_filepath, prefix);
+    strcat(*ptr_log_filepath, log_filename);
+    FILE *log_file = fopen(*ptr_log_filepath, "w");
+
+    if (!log_file) {
+        printf("Error opening log file\n");
+        TRACKED_FREE(log_filename);
+        TRACKED_FREE(*ptr_log_filepath);
+        fclose(log_file);
+        return;
+    }
+
+    TRACKED_FREE(log_filename);
+    // Close the log file
+    fclose(log_file);
+}

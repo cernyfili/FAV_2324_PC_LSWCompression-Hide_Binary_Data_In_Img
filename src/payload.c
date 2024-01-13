@@ -1,10 +1,8 @@
 //
 // Author: Filip Cerny
 // Date: 02.12.2023
-// Description: 
+// Description: File contains functions for working with payload data.
 //
-
-//todo check, test
 
 //Local includes
 #include "payload.h"
@@ -13,24 +11,54 @@
 
 //Lib includes
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <zlib.h>
 
+/**
+ * Signature of the payload data
+ */
 #define SIGNATURE "KIVPCSP_FilipCerny_hidden_payload_data"
 
+/**
+ * Signature len of the payload data
+ */
+#define PAYLOAD_SIGNATURE_SIZE 38
+
+/**
+ * Size of the payload size in bytes
+ */
+#define PAYLOADSIZE_SIZE 4
+
+/**
+ * Size of the CRC32 in bytes
+ */
+#define PAYLOAD_CRC32_SIZE 4
 
 //region FUNCTIONS DECLARATION
-static bool get_array_from_payload_file(const char *filename, PayloadArray *ptr_output);
+/**
+ * Function to read binary data from a file and return an array of byte values
+ * @param filename  is the path to the file
+ * @param ptr_return_output  is the pointer to the output array
+ * @return
+ * true if the function was successful
+ * false if there was an error
+ */
+static bool get_array_from_payload_file(const char *filename, PayloadArray *ptr_return_output);
 
-static uLong compute_crc32(PayloadArray data);
+/**
+ * Function to compute the CRC32 of a byte array
+ * @param data  is the byte array
+ * @return  the CRC32
+ */
+static bool compute_crc32(const PayloadArray data, uint32_t *ptr_return_result);
 
 //endregion
 
 //region FUNCTIONS DEFINITIONS
 
+//region PUBLIC FUNCTIONS
 /**
  * Function to prepare payload data it compresses the data and calculates the CRC32
  * and signs the data
@@ -39,60 +67,96 @@ static uLong compute_crc32(PayloadArray data);
  * @return  FREE MEMORY - the pointer to the final data
  *         NULL if there was an error
  */
-bool prepare_payload_data(const char *filename, PayloadArray *output) {
+bool prepare_payload_data(const char *filename, PayloadArray *ptr_return_output) {
+    //Check arguments
+    if (!filename || !ptr_return_output) {
+        LOG_MESSAGE(ERROR, "Wrong arguments.");
+        return false;
+    }
+    //Check if file exists
+    if (!file_exists(filename)) {
+        LOG_MESSAGE(ERROR, "File does not exist.");
+        return false;
+    }
+
+    //Prepare ptr_hidden_data
+    ptr_return_output->length = 0;
+    ptr_return_output->capacity = 0;
+    ptr_return_output->array = NULL;
+
     bool is_success;
-    //todo rewrite it to unsigned char array
+    CleanupCommand * clenup_list = NULL;
 
     // Get payload data from file
     PayloadArray payload_data;
     is_success = get_array_from_payload_file(filename, &payload_data);
     if (!is_success) {
-        LOG_MESSAGE(ERROR, "Error: Unable to read the entire file.");
+        LOG_MESSAGE(ERROR, "Unable to read the entire file.");
         return false;
     }
+    CLEANUP_ADD_COMMAND(&clenup_list, payload_data.array);
 
 
     // Compress payload data
     PayloadArray compressed_payload;
     is_success = compress_payload(payload_data, &compressed_payload);
     if (!is_success) {
-        LOG_MESSAGE(ERROR, "Error: Unable to compress payload data.");
+        LOG_MESSAGE(ERROR, "Unable to compress payload data.");
+        cleanup_run_commands(&clenup_list);
         return NULL;
     }
+    CLEANUP_ADD_COMMAND(&clenup_list, compressed_payload.array);
 
     char *signature = SIGNATURE;
     size_t signature_size_bytes = strlen(signature) * sizeof(char);
 
     size_t compressed_payload_size_bytes = compressed_payload.length * sizeof(PayloadType);
 
+    size_t crc_size_bytes = sizeof(uint32_t);
+
+    size_t payloadsize_size = sizeof(uint32_t);
+
     // Calculate the size of the final data (including signature and CRC32)
     size_t final_size_bytes =
-            compressed_payload_size_bytes + signature_size_bytes + sizeof(uLong);
+            payloadsize_size + signature_size_bytes + crc_size_bytes + compressed_payload_size_bytes;
 
-    // Allocate memory for the final data
-    output->array = TRACKED_MALLOC(final_size_bytes);
-    if (!output->array) {
-        LOG_MESSAGE(ERROR, "Error: Memory allocation failed.");
-        TRACKED_FREE(output->array);
-        TRACKED_FREE(payload_data.array);
+    uint32_t payloadsize_value = final_size_bytes;
+
+    // Compute CRC32
+    uint32_t crc32;
+    is_success = compute_crc32(compressed_payload, &crc32);
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Unable to compute CRC32.");
+        cleanup_run_commands(&clenup_list);
         return false;
     }
 
-    // Add signature at the beginning of the final data
-    memcpy(output->array, signature, signature_size_bytes);
+    // Allocate memory for the final data
+    ptr_return_output->array = TRACKED_MALLOC(final_size_bytes);
+    if (!ptr_return_output->array) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        cleanup_run_commands(&clenup_list);
+        return false;
+    }
 
-    // Compute CRC32
-    uLong crc32 = compute_crc32(compressed_payload);
+    ptr_return_output->capacity = (size_t)((double)final_size_bytes / (double)sizeof(PayloadType));
+    ptr_return_output->length = ptr_return_output->capacity;
+
+    //Add payload size at the beginning of the final data
+    memcpy(ptr_return_output->array, &payloadsize_value, payloadsize_size);
+
+    // Add signature at the beginning of the final data
+    memcpy(ptr_return_output->array + payloadsize_size, signature, signature_size_bytes);
 
     // Add CRC32 after the signature
-    memcpy(output->array + signature_size_bytes, &crc32, sizeof(uLong));
+    memcpy(ptr_return_output->array + payloadsize_size + signature_size_bytes, &crc32, crc_size_bytes);
 
     // Add compressed payload data after CRC32
-    memcpy(output->array + signature_size_bytes + sizeof(uLong), compressed_payload.array, compressed_payload_size_bytes);
+    memcpy(ptr_return_output->array + payloadsize_size + signature_size_bytes + crc_size_bytes, compressed_payload.array, compressed_payload_size_bytes);
 
     // Clean up
-    TRACKED_FREE(payload_data.array);
-    TRACKED_FREE(compressed_payload.array);
+    cleanup_run_commands(&clenup_list);
+
 
     return true;
 }
@@ -100,91 +164,137 @@ bool prepare_payload_data(const char *filename, PayloadArray *output) {
 /**
  * Function to extract payload data from the final data
  * @param hidden_data is the final data
- * @param output is the pointer to the output array
+ * @param ptr_return_payload is the pointer to the output array
  * @return
  * 0 success
  * 4 there is no signature
  * 5 file was corupted, crc32 doesnt match, cannot decompress
  * 6 other error
  */
-int extract_payload_from_data(PayloadArray hidden_data, PayloadArray *output) {
+int extract_payload_from_data(PayloadArray hidden_data, char **ptr_return_payload) {
+    //SANITY CHECK
+    if (!hidden_data.array || !ptr_return_payload) {
+        LOG_MESSAGE(ERROR, "Wrong arguments.");
+        return 6;
+    }
+
+    CleanupCommand * clenup_list = NULL;
+    bool is_succes;
+
+    size_t offset = 0;
+
+    //READ size
+    uint32_t payloadsize;
+    size_t payloadsize_size = PAYLOADSIZE_SIZE;
+    memcpy(&payloadsize, hidden_data.array + offset, payloadsize_size);
+    offset += payloadsize_size;
+
 
     //check if signature correct
     char *original_signature = SIGNATURE;
-    size_t signature_size_bytes = strlen(original_signature) * sizeof(char);
-    char *signature = TRACKED_MALLOC(signature_size_bytes);
+
+    //READ signature
+    size_t signature_size_bytes = PAYLOAD_SIGNATURE_SIZE;
+    char *signature = TRACKED_MALLOC(STR_ADD_ONE(signature_size_bytes));
     if (!signature) {
-        LOG_MESSAGE(ERROR, "Error: Memory allocation failed.");
-        TRACKED_FREE(signature);
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
         return 6;
     }
-    memcpy(signature, hidden_data.array, signature_size_bytes);
+    CLEANUP_ADD_COMMAND(&clenup_list, signature);
+    memcpy(signature, hidden_data.array + offset, signature_size_bytes);
+    offset += signature_size_bytes;
 
+    //add null terminator
+    char null_terminator = STRING_NULL_TERMINATOR;
+    memcpy(signature + signature_size_bytes, &null_terminator, sizeof(char));
+
+    //compare signatures
     if (strcmp(signature, original_signature) != 0) {
-        LOG_MESSAGE(ERROR, "Error: There is no signature.");
-        TRACKED_FREE(signature);
+        LOG_MESSAGE(ERROR, "There is no signature.");
+        cleanup_run_commands(&clenup_list);
         return 4;
     }
 
+    //READ crc32
+    uint32_t loaded_crc32;
+    size_t crc32_size = PAYLOAD_CRC32_SIZE;
+    memcpy(&loaded_crc32, hidden_data.array + offset, crc32_size);
+    offset += crc32_size;
 
-    //Save payload to payload_data
+
+    //READ payload_data
     PayloadArray payload_data;
-
-    payload_data.length = hidden_data.length - signature_size_bytes - sizeof(uLong);
+    payload_data.capacity = payloadsize - (payloadsize_size + signature_size_bytes + crc32_size);
+    payload_data.length = payload_data.capacity;
     payload_data.array = TRACKED_MALLOC(payload_data.length * sizeof(PayloadType));
     if (!payload_data.array){
-        LOG_MESSAGE(ERROR, "Error: Memory allocation failed.");
-        TRACKED_FREE(payload_data.array);
-        TRACKED_FREE(signature);
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        cleanup_run_commands(&clenup_list);
+        return 6;
+    }
+    CLEANUP_ADD_COMMAND(&clenup_list, payload_data.array);
+    memcpy(payload_data.array, hidden_data.array + offset, payload_data.length * sizeof(PayloadType));
+
+    //check crc32
+    uint32_t computed_crc32;
+    is_succes = compute_crc32(payload_data, &computed_crc32);
+    if (!is_succes) {
+        LOG_MESSAGE(ERROR, "Unable to compute CRC32.");
+        cleanup_run_commands(&clenup_list);
         return 6;
     }
 
-    memcpy(payload_data.array, hidden_data.array + signature_size_bytes + sizeof(uLong), payload_data.length * sizeof(PayloadType));
-
-    //check if crc32 is correct
-    uLong computed_crc32 = compute_crc32(payload_data);
-
-    uLong loaded_crc32;
-    memcpy(&loaded_crc32, hidden_data.array + signature_size_bytes, sizeof(uLong));
-
     if (computed_crc32 != loaded_crc32) {
-        LOG_MESSAGE(ERROR, "Error: File was corrupted, CRC32 doesnt match.");
-        TRACKED_FREE(payload_data.array);
-        TRACKED_FREE(signature);
+        LOG_MESSAGE(ERROR, "File was corrupted, CRC32 doesnt match.");
+        cleanup_run_commands(&clenup_list);
         return 5;
     }
-
 
     //Decompress payload_data
-    bool is_success = decompress_payload(payload_data, output);
+    bool is_success = decompress_payload(payload_data, ptr_return_payload);
     if (!is_success) {
-        LOG_MESSAGE(ERROR, "Error: Unable to decompress payload data.");
-        TRACKED_FREE(payload_data.array);
+        LOG_MESSAGE(ERROR, "Unable to decompress payload data.");
+        cleanup_run_commands(&clenup_list);
         return 5;
     }
+
+    cleanup_run_commands(&clenup_list);
+
 
     return 0;
 }
+//endregion
 
+//region PRIVATE FUNCTIONS
 /**
- * CHECKED
- *
  * Function to read binary data from a file and return an array of boolean values
  * @param filename  is the path to the file
  * @return
  *  a pointer to the boolean array
  *  NULL if there was an error
  */
-static bool get_array_from_payload_file(const char *filename, PayloadArray *ptr_output) {
-    //SANITY CHECK
-    if (!filename) {
+static bool get_array_from_payload_file(const char *filename, PayloadArray *ptr_return_output) {
+    //Check arguments
+    if (!filename || !ptr_return_output) {
+        LOG_MESSAGE(ERROR, "Wrong arguments.");
         return false;
     }
+    //Check if file exists
+    if (!file_exists(filename)) {
+        LOG_MESSAGE(ERROR, "File does not exist.");
+        return false;
+    }
+
+
+    //Prepare ptr_output
+    ptr_return_output->length = 0;
+    ptr_return_output->capacity = 0;
+    ptr_return_output->array = NULL;
 
     // Open the file
     FILE *file = fopen(filename, "rb");
     if (!file) {
-        LOG_MESSAGE(ERROR, "Error: Unable to open or read file %s", filename);
+        LOG_MESSAGE(ERROR, "Unable to open or read file %s", filename);
         return false;
     }
 
@@ -194,23 +304,23 @@ static bool get_array_from_payload_file(const char *filename, PayloadArray *ptr_
     rewind(file);
 
     // Allocate memory for the output array
-    ptr_output->length = (size_t) ((double) file_size_bytes * (1 / (double) sizeof(PayloadType)));
-    ptr_output->array = TRACKED_MALLOC(ptr_output->length * sizeof(PayloadType));
-    if (!ptr_output->array) {
-        TRACKED_FREE(ptr_output->array);
+    ptr_return_output->capacity = (size_t) ((double) file_size_bytes * (1 / (double) sizeof(PayloadType)));
+    ptr_return_output->array = TRACKED_MALLOC(ptr_return_output->capacity * sizeof(PayloadType));
+    if (!ptr_return_output->array) {
         fclose(file);
-        LOG_MESSAGE(ERROR, "Error: Memory allocation failed.");
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
         return false;
     }
 
     // Read binary data and convert to boolean values
-    size_t bytes_read = fread(ptr_output->array, sizeof(PayloadType), ptr_output->length, file);
+    size_t bytes_read = fread(ptr_return_output->array, sizeof(PayloadType), ptr_return_output->capacity, file);
     if (bytes_read != file_size_bytes) {
         fclose(file);
-        TRACKED_FREE(ptr_output->array);
-        LOG_MESSAGE(ERROR, "Error: Unable to read the entire file.");
+        TRACKED_FREE(ptr_return_output->array);
+        LOG_MESSAGE(ERROR, "Unable to read the entire file.");
         return false;
     }
+    ptr_return_output->length = ptr_return_output->capacity;
 
 
     // Close the file
@@ -225,16 +335,16 @@ static bool get_array_from_payload_file(const char *filename, PayloadArray *ptr_
  * @return  the CRC32
  * 0 if there was an error
  */
-static uLong compute_crc32(const PayloadArray data) {
+static bool compute_crc32(const PayloadArray data, uint32_t *ptr_return_result) {
     //SANITY CHECK
-    if (!data.array) {
-        log_message(ERROR, __FILE__, __LINE__, "Error: Invalid array pointer.");
-        return 0;
+    if (!data.array || !ptr_return_result) {
+        LOG_MESSAGE(ERROR, "Wrong arguments.");
+        return false;
     }
 
     //check if it 
 
-    uLong crc = crc32(0L, Z_NULL, 0);  // Initialize CRC32
+    uint32_t crc = crc32(0L, Z_NULL, 0);  // Initialize CRC32
 
     // Iterate through the boolean array and update CRC32
     for (size_t i = 0; i < data.length; ++i) {
@@ -244,7 +354,9 @@ static uLong compute_crc32(const PayloadArray data) {
         // Update CRC32 with the byte
         crc = crc32(crc, &element, sizeof(PayloadType));
     }
+    (*ptr_return_result) = crc;
 
-    return crc;
+    return true;
 }
+//endregion
 //endregion

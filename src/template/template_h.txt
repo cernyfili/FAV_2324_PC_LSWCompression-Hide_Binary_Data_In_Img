@@ -1,0 +1,16 @@
+//Local includes
+#include "utils/utils.h"
+
+//Lib includes
+
+//region DEFINE, MACROS
+
+//endregion
+
+//region STRUCTS
+
+//endregion
+
+//region FUNCTIONS DECLARATION
+
+//endregion

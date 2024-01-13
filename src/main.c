@@ -1,61 +1,132 @@
 //
-// Author: Lenovo
+// Author: Filip Cerny
 // Date: 07.11.2023
 // Description: Main file for project
 //
 
+//Lib includes
 #include <stdio.h>
 #include <stdlib.h>
-#include <float.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
+
+//Local includes
 #include "payload.h"
 #include "utils/utils.h"
 #include "image.h"
+#include "test/test_file.h"
 
+//region DEFINE, MACROS
+/**
+ * If RUN_TESTS is 1 then tests will be run
+ */
+#define RUN_TESTS 0
+
+/**
+ * Number of program arguments
+ */
 #define ARGUMENT_COUNT 4
 
+/**
+ * Flag for hiding data
+ */
 #define HIDE_DATA_FLAG "-h"
 
+/**
+ * Flag for extracting data
+ */
 #define EXTRACT_DATA_FLAG "-x"
 
-//todo write
-
-//region FUNCTIONS DECLARATION
-
-#define BUFFER_SIZE 1024
-
-static int
-hide_payload(const char *input_image_filepath, const char *hide_payload_filepath);
-
-static int extract_payload(const char *input_image_filepath, const char *output_payload_filepath);
-
-void clenup();
-
+/**
+ * Tutorial string
+ */
+#define TUTORIAL_STR "You can use this program for hiding data in image or extract data from image.\n"\
+                     "Hiding: ./binarydatainimg -h <input_image_filepath> <hide_payload_filepath>\n"\
+                     "Extraction: ./binarydatainimg -x <input_image_filepath> <output_payload_filepath>\n"
 //endregion
 
 
-//region FUNCTIONS DEFINITIONS
+//region FUNCTIONS DECLARATION
 
 /**
- * @brief main function
- * @param argc
- * @param argv
+ * Function to hide payload
+ * @param input_image_filepath is path to input image
+ * @param hide_payload_filepath  is path to file with payload
  * @return
+ * 0 succesfull
+ * 1 cannot open file
+ * 2 if input file is not BMP or PNG
+ * 3 if payload is too big for image
+ * 6 other error
+ */
+static int
+hide_payload(const char *input_image_filepath, const char *hide_payload_filepath);
+
+/**
+ * Function to extract payload
+ * @param input_image_filepath is path to input image
+ * @param output_payload_filepath is path to output file with payload
+ * @return
+ * 0 succesfull
+ * 1 cannot open file
+ * 2 if input file is not BMP or PNG; not 24 bit RGB
+ * 6 other error
+ */
+static int extract_payload(const char *input_image_filepath, const char *output_payload_filepath);
+
+/**
+ * Function to get temp filepath
+ * @param input_filepath is path to input file
+ * @param prefix is prefix for temp file
+ * @param ptr_return_output_filepath is path to output file
+ * @return
+ * true if succesfull
+ * false if not succesfull
+ */
+static bool get_temp_filepath(const char *input_filepath, char *prefix, char **ptr_return_output_filepath);
+
+
+
+/**
+ * cleanup function
+ */
+void cleanup();
+
+
+//endregion
+
+//region FUNCTIONS DEFINITIONS
+/**
+ * @brief main function
+ * @param argc is number of arguments
+ * @param argv is array of arguments
+ * @return
+ * 0 succesfull
+ * 1 wrong number of arguments
+ * 2 if input file is not BMP or PNG
+ * 3 if payload is too big for image
+ * 4 invalid direction flag
+ * 5 cannot open file
+ * 6 other error
  */
 int main(int argc, char *argv[]) {
-    atexit(clenup);
+    atexit(cleanup);
 
-    init_logger();
+    if (RUN_TESTS) {
+        run_tests();
+        return 0;
+    }
 
-    /*ERROR wrong number of arguments -> user manual */
-    //todo user manual
+
     if (argc != ARGUMENT_COUNT) {
         LOG_MESSAGE(ERROR, "Wrong number of arguments - needed 3 arguments");
+
+        printf(TUTORIAL_STR);
+
         exit(1);
     }
 
-    bool is_success;
     int result;
 
     //arguments to variable
@@ -71,10 +142,10 @@ int main(int argc, char *argv[]) {
         if (result == 0) {
             printf("Hiding completed.\n");
         } else {
-            LOG_MESSAGE(ERROR, "Error: Unable to hide the payload into the image.");
+            LOG_MESSAGE(ERROR, "Unable to hide the payload into the image.");
             exit(result);
         }
-    //flag to extract data
+        //flag to extract data
     } else if (strcmp(direction_flag, EXTRACT_DATA_FLAG) == 0) {
         char *input_image_filepath = argv[1];
         char *output_payload_filepath = argv[3];
@@ -84,7 +155,7 @@ int main(int argc, char *argv[]) {
         if (result == 0) {
             printf("Extraction completed.\n");
         } else {
-            LOG_MESSAGE(ERROR, "Error: Unable to extract the payload from the image.");
+            LOG_MESSAGE(ERROR, "Unable to extract the payload from the image.");
             exit(result);
         }
     } else {
@@ -96,11 +167,12 @@ int main(int argc, char *argv[]) {
 }
 
 /**
- * @brief hide payload
- * @param input_image_filepath
- * @param hide_payload_filepath
+ *  Function to hide payload
+ * @param input_image_filepath is path to input image
+ * @param hide_payload_filepath is path to file with payload
  * @return
  * 0 succesfull
+ * 1 cannot open file
  * 2 if input file is not BMP or PNG
  * 3 if payload is too big for image
  * 6 other error
@@ -112,44 +184,41 @@ hide_payload(const char *input_image_filepath, const char *hide_payload_filepath
         LOG_MESSAGE(ERROR, "Invalid arguments.");
         return 6;
     }
-
-    //output_image_filepath = "temp_" + input_image_filepath
-    char *ptr_filename_start = strrchr(input_image_filepath, '/') + 1;
-    if (!ptr_filename_start) {
-        ptr_filename_start = strrchr(input_image_filepath, '\\');
-        if (!ptr_filename_start) {
-            LOG_MESSAGE(ERROR, "Error: Unable to get the filename from the input image filepath.");
-            return 6;
-        }
+    //Check if the input image file exists
+    if (!file_exists(input_image_filepath) || !file_exists(hide_payload_filepath)) {
+        LOG_MESSAGE(ERROR, "Input image file does not exist.");
+        return 1;
     }
-    char *prefix_str = "temp_";
-    char *temp_output_image_filepath = TRACKED_MALLOC(CALC_STR_MEM_SIZE((strlen(prefix_str) + strlen(input_image_filepath))));
-    if (!temp_output_image_filepath) {
-        LOG_MESSAGE(ERROR, "Error: Unable to allocate memory.");
-        return 6;
-    }
-    memcpy(temp_output_image_filepath, input_image_filepath, strlen(input_image_filepath));
-    size_t shift = ptr_filename_start - input_image_filepath;
-    memcpy(temp_output_image_filepath + shift, prefix_str, strlen(prefix_str));
-    memcpy(temp_output_image_filepath + shift + strlen(prefix_str), ptr_filename_start, strlen(ptr_filename_start));
 
-
+    CleanupCommand * cleanup_list = NULL;
     bool is_success;
     int result;
+
+    char *prefix_str = "temp_";
+    char *temp_output_image_filepath = NULL;
+    is_success = get_temp_filepath(input_image_filepath, prefix_str, &temp_output_image_filepath);
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Unable to get the temp file path.");
+        return 6;
+    }
+    CLEANUP_ADD_COMMAND(&cleanup_list, temp_output_image_filepath);
 
     PayloadArray hide_data;
     is_success = prepare_payload_data(hide_payload_filepath, &hide_data);
     if (!is_success) {
-        LOG_MESSAGE(ERROR, "Error: Unable to prepare the payload data.");
+        LOG_MESSAGE(ERROR, "Unable to prepare the payload data.");
+        cleanup_run_commands(&cleanup_list);
         return 6;
     }
+    CLEANUP_ADD_COMMAND(&cleanup_list, hide_data.array);
 
     // Hide the payload into the image
     result = hide_data_lsb(input_image_filepath, hide_data, temp_output_image_filepath);
 
     //Check if the hiding was successful
     if (result != 0) {
-        LOG_MESSAGE(ERROR, "Error: Unable to hide the payload into the image.");
+        LOG_MESSAGE(ERROR, "Unable to hide the payload into the image.");
+        cleanup_run_commands(&cleanup_list);
         return result;
     }
 
@@ -157,94 +226,162 @@ hide_payload(const char *input_image_filepath, const char *hide_payload_filepath
     FILE *temp_file = fopen(temp_output_image_filepath, "rb");
     FILE *original_file = fopen(input_image_filepath, "wb");
 
-    if (!temp_file || !original_file) {
-        LOG_MESSAGE(ERROR, "Error: Unable to open files for copying.");
-        TRACKED_FREE(temp_output_image_filepath);
-        TRACKED_FREE(hide_data.array);
+    is_success = copy_files(temp_file, original_file);
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Unable to copy the temp file to the original file.");
+        cleanup_run_commands(&cleanup_list);
+        fclose(temp_file);
+        fclose(original_file);
         return 6;
     }
 
-    char buffer[BUFFER_SIZE];
-    size_t bytesRead;
-
-    while ((bytesRead = fread(buffer, 1, sizeof(buffer), temp_file)) > 0) {
-        fwrite(buffer, 1, bytesRead, original_file);
-    }
 
     //delete temp file
-    is_success = remove(temp_output_image_filepath);
-    if (!is_success) {
-        LOG_MESSAGE(ERROR, "Error: Unable to delete the temp file.");
-        TRACKED_FREE(temp_output_image_filepath);
-        TRACKED_FREE(hide_data.array);
+    fclose(temp_file);
+
+    result = remove(temp_output_image_filepath);
+    if (result != 0) {
+        LOG_MESSAGE(ERROR, "Unable to delete the temp file.");
+        cleanup_run_commands(&cleanup_list);
+        fclose(original_file);
         return 6;
     }
 
-    fclose(temp_file);
     fclose(original_file);
+    cleanup_run_commands(&cleanup_list);
 
-
-    TRACKED_FREE(temp_output_image_filepath);
-    TRACKED_FREE(hide_data.array);
 
     return 0;
 }
 
+
 /**
- * @brief extract payload
- * @param input_image_filepath
- * @param output_payload_filepath
+ * Function to extract payload
+ * @param input_image_filepath is path to input image
+ * @param output_payload_filepath is path to output file with payload
  * @return
+ * 0 succesfull
+ * 1 cannot open file
+ * 2 if input file is not BMP or PNG; not 24 bit RGB
+ * 6 other error
  */
 static int extract_payload(const char *input_image_filepath, const char *output_payload_filepath) {
     //Check if the arguments are valid
     if (!input_image_filepath || !output_payload_filepath) {
         LOG_MESSAGE(ERROR, "Invalid arguments.");
-        return false;//todo change
+        return 6;
+    }
+    //Check if the file exists
+    if (!file_exists(input_image_filepath)) {
+        LOG_MESSAGE(ERROR, "Input image file does not exist.");
+        return 1;
     }
 
-    bool is_success;
     int result;
+    CleanupCommand * cleanup_list = NULL;
 
     // Extract the payload from the image
     PayloadArray hidden_data;
     result = extract_data_lsb(input_image_filepath, &hidden_data);
-
     //Check if the extraction was successful
     if (result != 0) {
-        LOG_MESSAGE(ERROR, "Error: Unable to extract the payload from the image.");
+        LOG_MESSAGE(ERROR, "Unable to extract the payload from the image.");
         return result;
     }
+    CLEANUP_ADD_COMMAND(&cleanup_list, hidden_data.array);
 
-    PayloadArray payload_data;
+
+    char *payload_data;
     result = extract_payload_from_data(hidden_data, &payload_data);
     if (result != 0) {
-        LOG_MESSAGE(ERROR, "Error: Unable to get the payload from the array.");
+        LOG_MESSAGE(ERROR, "Unable to get the payload from the array.");
+        cleanup_run_commands(&cleanup_list);
+        TRACKED_FREE(payload_data);
         return result;
     }
+    CLEANUP_ADD_COMMAND(&cleanup_list, payload_data);
 
     //save payload to file
-    FILE *file = fopen(output_payload_filepath, "wb");
-    if (!file) {
-        LOG_MESSAGE(ERROR, "Error: Unable to open or read file %s.", output_payload_filepath);
-        return false;//todo change
+    FILE *output_file = fopen(output_payload_filepath, "wb");
+    if (!output_file) {
+        LOG_MESSAGE(ERROR, "Unable to open or read file %s.", output_payload_filepath);
+        cleanup_run_commands(&cleanup_list);
+        return 1;
     }
 
     // Write the payload to the file
-    size_t bytes_written = fwrite(payload_data.array, sizeof(PayloadType), payload_data.length, file);
-    if (bytes_written != payload_data.length) {
-        LOG_MESSAGE(ERROR, "Error: Unable to write payload to file.");
-        fclose(file);
-        return false;//todo change
+    size_t payload_data_size = strlen(payload_data);
+    size_t bytes_written = fwrite(payload_data, sizeof(char), payload_data_size, output_file);
+    if (bytes_written != payload_data_size * sizeof(char)) {
+        LOG_MESSAGE(ERROR, "Unable to write payload to file.");
+        cleanup_run_commands(&cleanup_list);
+        fclose(output_file);
+        return 1;
     }
 
-    fclose(file);
+    fclose(output_file);
+    cleanup_run_commands(&cleanup_list);
 
+
+    return 0;
+}
+
+/**
+ * Function to get temp filepath
+ * @param input_filepath is path to input file
+ * @param prefix is prefix for temp file
+ * @param ptr_return_output_filepath is path to output file
+ * @return
+ * true if succesfull
+ * false if not succesfull
+ */
+static bool get_temp_filepath(const char *input_filepath, char *prefix, char **ptr_return_output_filepath) {
+    //Check if the arguments are valid
+    if (!input_filepath || !prefix || !ptr_return_output_filepath) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return false;
+    }
+
+    CleanupCommand * cleanup_list = NULL;
+
+    //output_image_filepath = "temp_" + input_filepath
+    char *ptr_filename_start = strrchr(input_filepath, '/');
+    if (!ptr_filename_start) {
+        ptr_filename_start = strrchr(input_filepath, '\\');
+        if (!ptr_filename_start) {
+            LOG_MESSAGE(ERROR, "Unable to get the filename from the input image filepath.");
+            return false;
+        }
+    }
+
+    //to get start after /
+    ptr_filename_start++;
+
+    *ptr_return_output_filepath = TRACKED_MALLOC(CALC_STR_MEM_SIZE((strlen(prefix) + strlen(input_filepath))));
+    if (!*ptr_return_output_filepath) {
+        LOG_MESSAGE(ERROR, "Unable to allocate memory.");
+        return false;
+    }
+
+    //copy whole input_filepath to output_filepath
+    memcpy(*ptr_return_output_filepath, input_filepath, strlen(input_filepath));
+    size_t shift = ptr_filename_start - input_filepath;
+
+    //copy prefix to output_filepath
+    memcpy(*ptr_return_output_filepath + shift, prefix, strlen(prefix));
+
+    //copy filename to output_filepath
+    memcpy(*ptr_return_output_filepath + shift + strlen(prefix), ptr_filename_start, strlen(ptr_filename_start) + 1);
+
+    cleanup_run_commands(&cleanup_list);
 
     return true;
 }
 
-void clenup() {
+/**
+ * cleanup function
+ */
+void cleanup() {
     memory_management_report();
 }
 

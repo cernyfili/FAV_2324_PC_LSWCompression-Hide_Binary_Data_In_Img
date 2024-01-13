@@ -1,42 +1,30 @@
 //
 // Author: Filip Cerny
 // Date: 07.11.2023
-// Description: 
+// Description: File contains functions for hiding and extracting data in/from image.
 //
 
 //Local includes
 #include "image.h"
 #include "utils/utils.h"
-#include "utils/dictionary.h"
 
 //Lib includes
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <png.h>
 
-
+//region DEFINE, MACROS
 /**
  * The size of the PNG signature in bytes.
  */
 #define PNG_SIGNATURE_SIZE 8
 
 /**
- * The size of the BMP signature in bytes.
- */
-#define BMP_SIGNATURE_SIZE 2
-
-/**
  * The BMP signature.
  */
 #define BMP_SIGNATURE 0x4D42
-
-/**
- * The size of the BMP header in bytes.
- */
-#define BMP_HEADER_SIZE 54
 
 /**
  * The number of color components per pixel in a BMP image.
@@ -48,30 +36,65 @@
  */
 #define RGB_BIT_SIZE 24
 
-#define INITIAL_PAYLOADARRAY_SIZE 1000
+
+/**
+ * The number of bytes in a pixel
+ */
+#define NUM_COLOR_PIXEL 3
+
+/**
+ * BMP signature offset in bytes
+ */
+#define BMP_SIGNATURE_OFFSET_BYTES 0
+
+/**
+ * BMP data offset in bytes
+ */
+#define BMP_DATAOFFSET_OFFSET_BYTES 10
+
+/**
+ * BMP height offset in bytes
+ */
+#define BMP_HEIGHT_OFFSET_BYTES 22
+
+/**
+ * BMP bitcount offset in bytes
+ */
+#define BMP_BITCOUNT_OFFSET_BYTES 28
+
+/**
+ * BMP payloadsize offset in bytes
+ */
+#define PAYLOAD_SIZE_OFFSET 4
+
+/**
+ * BMP width offset in bytes
+ */
+#define BMP_WIDTH_OFFSET_BYTES 18
+
+
+//endregion
+
 
 //region STRUCTURES
-typedef struct {
-    uint16_t signature;
-    uint32_t fileSize;
-    uint16_t reserved1;
-    uint16_t reserved2;
-    uint32_t dataOffset;
-} BMPHeader;
 
-typedef struct  {
-    uint32_t headerSize;
-    int32_t width;
-    int32_t height;
-    uint16_t colorPlanes;
-    uint16_t bitsPerPixel;
-    uint32_t compressionMethod;
-    uint32_t imageSize;
-    int32_t horizontalResolution;
-    int32_t verticalResolution;
-    uint32_t numColorsInPalette;
-    uint32_t numImportantColors;
-} DIBHeader;
+//BMP METADATA
+typedef uint16_t BmpSignatureType;
+typedef uint32_t BmpDataOffsetType;
+typedef uint32_t BmpWidthType;
+typedef uint32_t BmpHeightType;
+typedef uint16_t BmpBitCountType;
+
+/**
+ * BMP metadata
+ */
+typedef struct {
+    BmpSignatureType signature;
+    BmpDataOffsetType dataoffset;
+    BmpWidthType width;
+    BmpHeightType height;
+    BmpBitCountType bitcount;
+} BmpMetadata;
 //endregion
 
 //region FUNCTIONS DECLARATION
@@ -82,9 +105,14 @@ typedef struct  {
  * @param input_filepath - The path to the input PNG file.
  * @param hide_data - The binary data to hide. Each bit of the data will be embedded in the LSB of the image.
  * @param output_filepath - The path to the output PNG file.
- * @return true if the data hiding is successful, false otherwise.
+ * @return
+ * 0 succesfull
+ * 1 cannot open file
+ * 2 if input file is not BMP; not 24 bit RGB
+ * 3 if payload is too big for image
+ * 6 other error
  */
-static int hide_data_lsb_png(const char *input_filepath, const PayloadArray hide_data,
+static int hide_data_lsb_png(const char *input_filepath, PayloadArray hide_data,
                              const char *output_filepath);
 
 /**
@@ -101,62 +129,108 @@ static int hide_data_lsb_bmp(const char *input_filepath, PayloadArray payload_da
 /**
  * Extracts binary data from the least significant bit (LSB) of each RGB value in a BMP file.
  * @param input_image_filepath  The path to the input BMP file.
- * @param ptr_hidden_data  The path to the output BMP file.
+ * @param ptr_return_hidden_data  The path to the output BMP file.
  * @return  0 if the hiding process is successful, non-zero otherwise.
  */
-static int extract_data_lsb_png(const char *input_image_filepath, PayloadArray *ptr_hidden_data);
+static int extract_data_lsb_png(const char *input_image_filepath, PayloadArray *ptr_return_hidden_data);
 
 
 /**
  * Extracts binary data from the least significant bit (LSB) of each RGB value in a BMP file.
  * @param input_image_filepath  The path to the input BMP file.
- * @param ptr_hidden_data  The path to the output BMP file.
+ * @param ptr_return_hidden_data  The path to the output BMP file.
  * @return  0 if the hiding process is successful, non-zero otherwise.
  */
-static int extract_data_lsb_bmp(const char *input_image_filepath, PayloadArray *ptr_hidden_data);
+static int extract_data_lsb_bmp(const char *input_image_filepath, PayloadArray *ptr_return_hidden_data);
 
+/**
+ * Checks if the input file is a PNG file.
+ * @param input_file  The input file.
+ * @return true if the input file is a PNG file, false otherwise.
+ */
 static bool is_png_file(FILE *input_file);
 
-static bool payloadarray_add_element(PayloadArray * payload_array, PayloadType element);
-
+/**
+ *  Sets the last bit of the value to the change_value.
+ * @param change_value  The value to be set as the last bit.
+ * @param value  The value to be changed.
+ * @return  true if the change was successful, false otherwise.
+ */
 static bool set_last_bit(bool change_value, uint8_t *value);
+
+/**
+ * Checks if the input file is a BMP file.
+ * @param input_file  The input file.
+ * @return true if the input file is a BMP file, false otherwise.
+ */
+static bool get_last_bit(ColorValueType value);
+
+/**
+ * Checks if the input file is a BMP file.
+ * @param input_file  The input file.
+ * @return true if the input file is a BMP file, false otherwise.
+ */
+static bool read_bmp_metadata(FILE *input_file, BmpMetadata *ptr_return_bmpmetadata);
+
+/**
+ * Checks if the input file is a BMP file.
+ * @param input_file  The input file.
+ * @return true if the input file is a BMP file, false otherwise.
+ */
+static bool payload_get_payloadsize(PayloadArray array, size_t *ptr_return_size);
 
 
 /**
- * Hides binary data in the least significant bit (LSB) of each RGB value in a BMP file.
- * @param input_filepath  The path to the input BMP file.
- * @param hide_data   Pointer to an array of binary data to be hidden.
- * @param output_filepath  The path to the output BMP file.
- * @return  0 if the hiding process is successful, non-zero otherwise.
+ * Frees the memory allocated by libpng.
+ * @param png_read_ptr  The PNG read structure.
+ * @param png_read_info_ptr  The PNG info structure.
+ * @param row_pointers_size  The number of rows in the PNG image.
+ * @param row_pointers  The PNG image rows.
  */
-static bool get_next_payload_bit(PayloadArray payload_array, size_t *array_index, size_t *element_bit_shift);
+static void free_png_read_values(png_structp *png_read_ptr, png_infop *png_read_info_ptr, png_uint_32 row_pointers_size,
+                                 png_bytepp row_pointers);
 
-static bool get_last_bit(unsigned char value);
-
-static bool payload_array_add_bit(PayloadArray *data, bool bit, size_t *array_index, size_t *element_bitshift);
-
-static bool payloadarray_initialize(PayloadArray *data);
+/**
+ * Frees the memory allocated by libpng.
+ * @param png_read_ptr  The PNG read structure.
+ * @param png_read_info_ptr  The PNG info structure.
+ * @param row_pointers_size  The number of rows in the PNG image.
+ * @param row_pointers  The PNG image rows.
+ * @param png_write_ptr  The PNG write structure.
+ * @param png_write_end_info_ptr  The PNG end info structure.
+ */
+static void free_png_read_write_values(png_structp *png_read_ptr, png_infop *png_read_info_ptr, png_uint_32 row_pointers_size,
+                                       png_bytepp row_pointers, png_structp *png_write_ptr, png_infop *png_write_end_info_ptr);
 //endregion
 
 //region FUNCTIONS DEFINITIONS
 
+
+//region PUBLIC FUNCTIONS
 /**
- *
- * @param input_filepath
- * @param hide_data
- * @param output_filepath
+ * Checks if the input file is a PNG file.
+ * @param input_filepath The input file.
+ * @param hide_data Pointer to an array of binary data to be hidden.
+ * @param output_filepath The path to the output BMP file.
  * @return
  * 0 succesfull
+ * 1 cannot open file
  * 2 if input file is not BMP or PNG
  * 3 if payload is too big for image
  * 6 other error
  */
 int hide_data_lsb(const char *input_filepath, const PayloadArray hide_data,
-                   const char *output_filepath) {
+                  const char *output_filepath) {
     //Check if the arguments are valid
     if (!input_filepath || !hide_data.array || !output_filepath) {
         LOG_MESSAGE(ERROR, "Invalid arguments.");
         return 6;
+    }
+
+    //Check if files exists
+    if (!file_exists(input_filepath)) {
+        LOG_MESSAGE(ERROR, "Input or output file does not exist.");
+        return 1;
     }
 
     if (strcmp(input_filepath, output_filepath) == 0) {
@@ -203,20 +277,30 @@ int hide_data_lsb(const char *input_filepath, const PayloadArray hide_data,
 
 /**
  * Extracts binary data from the least significant bit (LSB) of each RGB value in a BMP file.
- * @param input_image_filepath
- * @param ptr_hidden_data
+ * @param input_image_filepath The path to the input BMP file.
+ * @param ptr_return_hidden_data The path to the output BMP file.
  * @return
  * 0 succesfull
  * 1 cannot open file
  * 2 if input file is not BMP or PNG; not 24 bit RGB
  * 6 other error
  */
-int extract_data_lsb(const char *input_image_filepath, PayloadArray *ptr_hidden_data) {
+int extract_data_lsb(const char *input_image_filepath, PayloadArray *ptr_return_hidden_data) {
     //Check if the arguments are valid
-    if (!input_image_filepath || !ptr_hidden_data) {
+    if (!input_image_filepath || !ptr_return_hidden_data) {
         LOG_MESSAGE(ERROR, "Invalid arguments.");
         return 6;
     }
+    //Check if files exists
+    if (!file_exists(input_image_filepath)) {
+        LOG_MESSAGE(ERROR, "Input file does not exist.");
+        return 1;
+    }
+
+    //Prepare ptr_hidden_data
+    ptr_return_hidden_data->length = 0;
+    ptr_return_hidden_data->capacity = 0;
+    ptr_return_hidden_data->array = NULL;
 
     int result;
 
@@ -229,7 +313,7 @@ int extract_data_lsb(const char *input_image_filepath, PayloadArray *ptr_hidden_
 
     // Check if the input file is a BMP file
     if (strcmp(extension, ".bmp") == 0) {
-        result = extract_data_lsb_bmp(input_image_filepath, ptr_hidden_data);
+        result = extract_data_lsb_bmp(input_image_filepath, ptr_return_hidden_data);
 
         //Check if the extraction process was successful
         if (result != 0) {
@@ -237,13 +321,13 @@ int extract_data_lsb(const char *input_image_filepath, PayloadArray *ptr_hidden_
             return result;
         }
 
-        return true;
+        return 0;
 
     }
 
     // Check if the input file is a PNG file
     if (strcmp(extension, ".png") == 0) {
-        result = extract_data_lsb_png(input_image_filepath, ptr_hidden_data);
+        result = extract_data_lsb_png(input_image_filepath, ptr_return_hidden_data);
 
         //Check if the extraction process was successful
         if (result != 0) {
@@ -251,15 +335,17 @@ int extract_data_lsb(const char *input_image_filepath, PayloadArray *ptr_hidden_
             return result;
         }
 
-        return true;
+        return 0;
     }
 
 
     LOG_MESSAGE(ERROR, "Input file is not a BMP or PNG file.");
     return 2;
 }
+//endregion
 
 
+//region PRIVATE FUNCTIONS
 /**
  * Hides binary data in the Least Significant Bit (LSB) of each pixel in a PNG image.
  *
@@ -268,13 +354,13 @@ int extract_data_lsb(const char *input_image_filepath, PayloadArray *ptr_hidden_
  * @param output_filepath - The path to the output PNG file.
  * @return
  * 0 succesfull
+ * 1 cannot open file
  * 2 if input file is not BMP; not 24 bit RGB
  * 3 if payload is too big for image
  * 6 other error
  */
-int hide_data_lsb_png(const char *input_filepath, const PayloadArray hide_data,
-                       const char *output_filepath) {
-    //todo check if binary_data fits in BMP
+static int hide_data_lsb_png(const char *input_filepath, PayloadArray hide_data,
+                      const char *output_filepath) {
 
     //Check if the arguments are valid
     if (!input_filepath || !hide_data.array || !output_filepath) {
@@ -282,6 +368,13 @@ int hide_data_lsb_png(const char *input_filepath, const PayloadArray hide_data,
         return 6;
     }
 
+    //Check if file exists
+    if (!file_exists(input_filepath)) {
+        LOG_MESSAGE(ERROR, "Input file does not exist.");
+        return 1;
+    }
+
+    //Check if files are same
     if (strcmp(input_filepath, output_filepath) == 0) {
         LOG_MESSAGE(ERROR, "Input and output filepaths are the same.");
         return 6;
@@ -292,13 +385,9 @@ int hide_data_lsb_png(const char *input_filepath, const PayloadArray hide_data,
 
     // Check if the file was opened successfully
     if (!input_file || !output_file) {
-        // Unable to open file
         LOG_MESSAGE(ERROR, "Unable to open file.");
-
-        // Close the files
         fclose(input_file);
         fclose(output_file);
-
         return 1;
     }
 
@@ -306,31 +395,26 @@ int hide_data_lsb_png(const char *input_filepath, const PayloadArray hide_data,
     bool is_success = is_png_file(input_file);
     if (!is_success) {
         LOG_MESSAGE(ERROR, "Input file is not a PNG file.");
-
-        // Close the files
         fclose(input_file);
         fclose(output_file);
-
         return 2;
     }
 
     // Create PNG read and write structures
     png_structp png_read_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     png_structp png_write_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-
     if (!png_read_ptr || !png_write_ptr) {
-        printf("Failed to create PNG read or write structure.\n");
+        LOG_MESSAGE(ERROR, "Failed to create PNG read or write structure.");
         fclose(input_file);
         fclose(output_file);
         return 6;
     }
 
     // Create PNG info structures
-    png_infop png_info_ptr = png_create_info_struct(png_read_ptr);
-    png_infop png_end_info_ptr = png_create_info_struct(png_write_ptr);
-
-    if (!png_info_ptr || !png_end_info_ptr) {
-        printf("Failed to create PNG info structure.\n");
+    png_infop png_read_info_ptr = png_create_info_struct(png_read_ptr);
+    png_infop png_write_end_info_ptr = png_create_info_struct(png_write_ptr);
+    if (!png_read_info_ptr || !png_write_end_info_ptr) {
+        printf("Failed to create PNG info structure.");
         png_destroy_read_struct(&png_read_ptr, NULL, NULL);
         png_destroy_write_struct(&png_write_ptr, NULL);
         fclose(input_file);
@@ -341,8 +425,8 @@ int hide_data_lsb_png(const char *input_filepath, const PayloadArray hide_data,
     // Set up error handling
     if (setjmp(png_jmpbuf(png_read_ptr)) || setjmp(png_jmpbuf(png_write_ptr))) {
         LOG_MESSAGE(ERROR, "Error occurred during PNG read or write operation.");
-        png_destroy_read_struct(&png_read_ptr, &png_info_ptr, &png_end_info_ptr);
-        png_destroy_write_struct(&png_write_ptr, &png_info_ptr);
+        png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
+        png_destroy_write_struct(&png_write_ptr, &png_write_end_info_ptr);
         fclose(input_file);
         fclose(output_file);
         return 6;
@@ -352,39 +436,73 @@ int hide_data_lsb_png(const char *input_filepath, const PayloadArray hide_data,
     png_init_io(png_read_ptr, input_file);
     png_init_io(png_write_ptr, output_file);
 
+    //set signature bytes
+    png_set_sig_bytes(png_read_ptr, PNG_SIGNATURE_SIZE);
+
+
     // Read PNG header
-    png_read_info(png_read_ptr, png_info_ptr);
+    png_read_info(png_read_ptr, png_read_info_ptr);
 
     //Check if the input file is 24-bit RGB PNG file
-    int color_type = png_get_color_type(png_read_ptr, png_info_ptr);
-    if (color_type != PNG_COLOR_TYPE_RGB) {
+    int bit_depth = png_get_bit_depth(png_read_ptr, png_read_info_ptr);
+    if (bit_depth * PIXEL_COLOR_NUM != RGB_BIT_SIZE) {
         LOG_MESSAGE(ERROR, "Input file is not a 24-bit RGB PNG image.");
-
-        //Clean up
-        png_destroy_read_struct(&png_read_ptr, &png_info_ptr, &png_end_info_ptr);
-        png_destroy_write_struct(&png_write_ptr, &png_info_ptr);
-
-        //Close the files
+        png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
+        png_destroy_write_struct(&png_write_ptr, &png_write_end_info_ptr);
         fclose(input_file);
         fclose(output_file);
-
         return 2;
     }
 
+    //Get color type
+    int color_type = png_get_color_type(png_read_ptr, png_read_info_ptr);
+
+    //Check if payload fits to image
+    png_uint_32 height = png_get_image_height(png_read_ptr, png_read_info_ptr);
+    png_uint_32 width = png_get_image_width(png_read_ptr, png_read_info_ptr);
+    double pixel_count = width * (double) height;
+    int bits_in_payload = (int) ((double) hide_data.length * BITS_IN_BYTE);
+    if (pixel_count < bits_in_payload) {
+        LOG_MESSAGE(ERROR, "Payload is too big for image.");
+        png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
+        png_destroy_write_struct(&png_write_ptr, &png_write_end_info_ptr);
+        fclose(input_file);
+        fclose(output_file);
+        return 3;
+    }
+
     // Write PNG header
-    png_write_info(png_write_ptr, png_info_ptr);
+    if (setjmp(png_jmpbuf(png_write_ptr))) {
+        LOG_MESSAGE(ERROR, "Error occurred during PNG read or write operation.");
+        png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
+        png_destroy_write_struct(&png_write_ptr, &png_write_end_info_ptr);
+        fclose(input_file);
+        fclose(output_file);
+        return 6;
+    }
 
+    png_set_IHDR(png_write_ptr, png_write_end_info_ptr, width, height,
+                 bit_depth, color_type, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
-    // Get image dimensions
-    png_uint_32 height = png_get_image_height(png_read_ptr, png_info_ptr);
-
-    // Allocate memory for pixel row_array
-    png_bytepp row_pointers = (png_bytepp) png_malloc(png_read_ptr, height *
-                                                                    sizeof(png_bytep));
+    png_write_info(png_write_ptr, png_write_end_info_ptr);
 
     // Read PNG image row_array
+
+    // Allocate memory for pixel row_array
+    png_bytepp row_pointers = (png_bytepp) png_malloc(png_read_ptr, height * sizeof(png_bytep));
+
+    // Error reading PNG image
+    if (setjmp(png_jmpbuf(png_read_ptr))) {
+        LOG_MESSAGE(ERROR, "Error occurred during PNG read or write operation.");
+        png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
+        png_destroy_write_struct(&png_write_ptr, &png_write_end_info_ptr);
+        fclose(input_file);
+        fclose(output_file);
+        return 6;
+    }
     for (int y = 0; y < height; ++y) {
-        row_pointers[y] = (png_bytep) png_malloc(png_read_ptr, png_get_rowbytes(png_read_ptr, png_info_ptr));
+        row_pointers[y] = (png_bytep) png_malloc(png_read_ptr, png_get_rowbytes(png_read_ptr, png_read_info_ptr));
         png_read_row(png_read_ptr, row_pointers[y], NULL);
     }
 
@@ -393,48 +511,77 @@ int hide_data_lsb_png(const char *input_filepath, const PayloadArray hide_data,
     size_t payload_element_bitshift = 0;
 
     // Hide binary row_array in the LSB of each pixel
-    for (int y = 0; y < height; ++y) {
-        size_t row_bytes = png_get_rowbytes(png_read_ptr, png_info_ptr);
+    for (int y = 0; y < height; y++) {
+        //end when all payload data is hidden
+        if (payload_array_index >= hide_data.length) {
+            break;
+        }
+
+        size_t row_bytes = png_get_rowbytes(png_read_ptr, png_read_info_ptr);
         for (int x = 0; x < row_bytes; x += 3) {
-            unsigned char * ptr_blue_value = &row_pointers[y][x + 2];
+            //end when all payload data is hidden
+            if (payload_array_index >= hide_data.length) {
+                break;
+            }
+
+            ColorValueType *ptr_blue_value = &row_pointers[y][x + 2];
 
             //change last bit of b_value to ptr_hidden_data
-            bool next_payload_bit = get_next_payload_bit(hide_data, &payload_array_index, &payload_element_bitshift);
+            bool next_payload_bit;
+            is_success = payloadarray_get_next_bit(hide_data, &payload_array_index,
+                                                   &payload_element_bitshift, &next_payload_bit);
+            if (!is_success) {
+                LOG_MESSAGE(ERROR, "Cannot get next bit");
+                free_png_read_write_values(&png_read_ptr, &png_read_info_ptr, height, row_pointers,
+                                           &png_write_ptr, &png_write_end_info_ptr);
+                fclose(input_file);
+                fclose(output_file);
+                return 6;
+            }
 
             bool is_succes = set_last_bit(next_payload_bit, ptr_blue_value);
-            if (!is_succes){
-                LOG_MESSAGE( ERROR, "Cannot change last bit");
-
-                for (int z = 0; z < height; ++z) {
-                    png_free(png_read_ptr, row_pointers[z]);
-                }
-                png_free(png_read_ptr, row_pointers);
-                png_destroy_read_struct(&png_read_ptr, &png_info_ptr, &png_end_info_ptr);
-                png_destroy_write_struct(&png_write_ptr, &png_info_ptr);
+            if (!is_succes) {
+                LOG_MESSAGE(ERROR, "Cannot change last bit");
+                free_png_read_write_values(&png_read_ptr, &png_read_info_ptr, height, row_pointers,
+                                           &png_write_ptr, &png_write_end_info_ptr);
+                fclose(input_file);
+                fclose(output_file);
                 return 6;
             }
         }
     }
 
-    // Write modified PNG image row_array
-
-    png_uint_32 height_output = png_get_image_height(png_write_ptr, png_info_ptr);
-    for (int y = 0; y < height_output; ++y) {//todo check if not problem
+    // Write modified PNG image row_array with modified blue values
+    //Check if write error
+    if (setjmp(png_jmpbuf(png_write_ptr))) {
+        LOG_MESSAGE(ERROR, "Error occurred during PNG read or write operation.");
+        free_png_read_write_values(&png_read_ptr, &png_read_info_ptr, height, row_pointers,
+                                   &png_write_ptr, &png_write_end_info_ptr);
+        fclose(input_file);
+        fclose(output_file);
+        return 6;
+    }
+    png_uint_32 height_output = png_get_image_height(png_write_ptr, png_write_end_info_ptr);
+    for (int y = 0; y < height_output; y++) {
         png_write_row(png_write_ptr, row_pointers[y]);
+    }
+    //Check if write error
+    if (setjmp(png_jmpbuf(png_write_ptr))) {
+        LOG_MESSAGE(ERROR, "Error occurred during PNG read or write operation.");
+        free_png_read_write_values(&png_read_ptr, &png_read_info_ptr, height, row_pointers,
+                                   &png_write_ptr, &png_write_end_info_ptr);
+        fclose(input_file);
+        fclose(output_file);
+        return 6;
     }
 
     // Write end of PNG
-    png_write_end(png_write_ptr, png_end_info_ptr);
+    png_write_end(png_write_ptr, png_write_end_info_ptr);
 
 
     // Clean up
-    for (int y = 0; y < height; ++y) {
-        png_free(png_read_ptr, row_pointers[y]);
-    }
-    png_free(png_read_ptr, row_pointers);
-    png_destroy_read_struct(&png_read_ptr, &png_info_ptr, &png_end_info_ptr);
-    png_destroy_write_struct(&png_write_ptr, &png_info_ptr);
-
+    free_png_read_write_values(&png_read_ptr, &png_read_info_ptr, height, row_pointers,
+                               &png_write_ptr, &png_write_end_info_ptr);
 
     // Close the files
     fclose(input_file);
@@ -455,232 +602,183 @@ int hide_data_lsb_png(const char *input_filepath, const PayloadArray hide_data,
  * 3 if payload is too big for image
  * 6 other error
  */
-int hide_data_lsb_bmp(const char *input_filepath, PayloadArray payload_data,
-                       const char *output_filepath) {
-    //todo check if binary_data fits in BMP
+static int hide_data_lsb_bmp(const char *input_filepath, PayloadArray payload_data,
+                      const char *output_filepath) {
 
     //Check if the arguments are valid
-    if (!input_filepath || !payload_data.array || !output_filepath) {
+    if (!input_filepath || !payload_data.array ||
+        !output_filepath) {
         LOG_MESSAGE(ERROR, "Invalid arguments.");
         return 6;
     }
 
+    //Check if file exists
+    if (!file_exists(input_filepath)) {
+        LOG_MESSAGE(ERROR, "Input file does not exist.");
+        return 1;
+    }
+
+    //Check if files are same
     if (strcmp(input_filepath, output_filepath) == 0) {
         LOG_MESSAGE(ERROR, "Input and output filepaths are the same.");
         return 6;
     }
 
+    CleanupCommand *cleanup_list = NULL;
     FILE *input_file = fopen(input_filepath, "rb");
     FILE *output_file = fopen(output_filepath, "wb");
 
     // Check if the file was opened successfully
     if (!input_file || !output_file) {
-        // Unable to open file
         LOG_MESSAGE(ERROR, "Unable to open file.");
-
-        // Close the files
         fclose(input_file);
         fclose(output_file);
-
         return 1;
     }
 
-    // Check if the input file is a BMP file
-    // Read BMP header
-    BMPHeader bmp_header;
-    fread(&bmp_header, sizeof(BMPHeader), 1, input_file);
-    if (bmp_header.signature != BMP_SIGNATURE) {
-        LOG_MESSAGE(ERROR, "Input file is not a BMP file.");
-
-        // Close the files
+    //read BMP metadata
+    BmpMetadata bmp_metadata;
+    bool is_success = read_bmp_metadata(input_file, &bmp_metadata);
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Cannot read BMP metadata.");
         fclose(input_file);
         fclose(output_file);
-
-        return 2;
+        return 6;
     }
 
-    // Read DIB header
-    DIBHeader dib_header;
-    fread(&dib_header, sizeof(DIBHeader), 1, input_file);
+    // Check if the input file is a BMP file
+    if (bmp_metadata.signature != BMP_SIGNATURE) {
+        LOG_MESSAGE(ERROR, "Input file is not a BMP file.");
+        fclose(input_file);
+        fclose(output_file);
+        return 2;
+    }
 
     // Check if it's a 24-bit uncompressed BMP file
-    if (dib_header.colorPlanes != RGB_BIT_SIZE || dib_header.compressionMethod != 0) {
+    if (bmp_metadata.bitcount != RGB_BIT_SIZE) {
         LOG_MESSAGE(ERROR, "Input file is not 24 bit RGB BMP file or there is compression.");
-
-        // Close the files
         fclose(input_file);
         fclose(output_file);
-
         return 2;
     }
 
-    // Write BMP header to output file
-    fwrite(&bmp_header, sizeof(BMPHeader), 1, output_file);
 
-    // Write DIB BMP header to output file
-    fwrite(&dib_header, sizeof(DIBHeader), 1, output_file);
+    //Check if payload fits to image
+    double pixel_count = bmp_metadata.width * (double) bmp_metadata.height;
+    int bits_in_payload = (int) ((double) payload_data.length * BITS_IN_BYTE);
+    if (pixel_count < bits_in_payload) {
+        LOG_MESSAGE(ERROR, "Payload is too big for image.");
+        fclose(input_file);
+        fclose(output_file);
+        return 3;
+    }
+
+    //Copy the whole input file to output file
+    is_success = copy_files(input_file, output_file);
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Cannot copy files.");
+        fclose(input_file);
+        fclose(output_file);
+        return 6;
+    }
+
+    // Move to the start of pixel data - after only editing the color value
+    fseek(input_file, bmp_metadata.dataoffset, SEEK_SET);
+    fseek(output_file, bmp_metadata.dataoffset, SEEK_SET);
+
+    //create array for one row
+    int bytes_per_row = (int) ((double) bmp_metadata.width * (double) NUM_COLOR_PIXEL);
+    ColorValueType *row_array = TRACKED_MALLOC(bytes_per_row * sizeof(ColorValueType));
+    if (!row_array) {
+        LOG_MESSAGE(ERROR, "Cannot allocate memory for row array");
+        fclose(input_file);
+        fclose(output_file);
+        return 6;
+    }
+    CLEANUP_ADD_COMMAND(&cleanup_list, row_array);
 
     //vars for bitshifts
     size_t payload_array_index = 0;
     size_t payload_element_bitshift = 0;
 
-    //weight and width from header
-    int width = dib_header.width;
-    int height = dib_header.height;
-
-
-    //Check if payload fits to image
-    double pixel_count = width * (double )height;
-    int bits_in_payload = (int)((double) payload_data.length * 8.0);
-    if (pixel_count < bits_in_payload){
-        LOG_MESSAGE(ERROR, "Payload is too big for image.");
-        return 3;
-    }
-
-    //region Array for one row
-    size_t pixel_arr_length = NUM_COLOR_PIXEL;
-
-    // Move to the start of pixel data
-    fseek(input_file, bmp_header.dataOffset, SEEK_SET);
-
-    int bytes_per_row = width * NUM_COLOR_PIXEL;
-    uint8_t* row_array = TRACKED_MALLOC(bytes_per_row * sizeof(uint8_t));
-    if (!row_array){
-        LOG_MESSAGE(ERROR, "Cannot allocate memory for row array");
-        return 6;
-    }
-
-    for(int y = 0; y < height; ++y)
-    {
-        printf("row %d\n", y);
-        //read the whole row
-        fread(row_array, sizeof(uint8_t), bytes_per_row, input_file);
-        for(int x = 0; x < bytes_per_row; x += NUM_COLOR_PIXEL)
-        {
-            uint8_t * ptr_blue_value = &row_array[x];//becouse bmp B G R
-
-            //change last bit of b_value to ptr_hidden_data
-            bool next_payload_bit = get_next_payload_bit(payload_data, &payload_array_index, &payload_element_bitshift);
-
-            bool is_succes = set_last_bit(next_payload_bit, ptr_blue_value);
-            if (!is_succes){
-                LOG_MESSAGE( ERROR, "Cannot change last bit");
-                TRACKED_FREE(row_array);
-                return 6;
-            }
-
+    for (int y = 0; y < bmp_metadata.height; y++) {
+        //end when all payload data is hidden
+        if (payload_array_index >= payload_data.length) {
+            break;
         }
-
-        //write whole row to output file
-        fwrite(row_array, sizeof(uint8_t), bytes_per_row, output_file);
-    }
-    //endregion
-
-    //region Array for whole image - too big
-    /*size_t pixel_arr_length = NUM_COLOR_PIXEL;
-    *//*uint8_t pixel[pixel_arr_length];*//*
-    // Move to the start of pixel data
-    fseek(input_file, bmp_header.dataOffset, SEEK_SET);
-    int bytes_per_row = width * NUM_COLOR_PIXEL;
-    *//*uint8_t* row_array = TRACKED_MALLOC(bytes_per_row * sizeof(uint8_t));*//*
-    //todo save modified img to array and then to file
-
-    //array with all the pixels
-    size_t pixel_array_length = (size_t)height * (size_t)bytes_per_row;
-    uint8_t * pixel_array = TRACKED_MALLOC(pixel_array_length * sizeof(uint8_t));
-    if (!pixel_array){
-        LOG_MESSAGE(ERROR, "Cannot allocate memory for pixel array");
-        return 6;
-    }
-
-    fread(pixel_array, sizeof(uint8_t), pixel_array_length, input_file);
-
-    for(int y = 0; y < height; y++) {
-        printf("row %d\n", y);
-
-        for(int x = 0; x < bytes_per_row; x++) {
-            //skip other colors than blue
-            if (x % 3 != 0){
+        for (int x = 0; x < bmp_metadata.width; x++) {
+            //end when all payload data is hidden
+            if (payload_array_index >= payload_data.length) {
                 break;
             }
-
-            size_t index = y * bytes_per_row + x;
-            uint8_t * ptr_blue_value = &(pixel_array[index]);//becouse bmp B G R
+            ColorValueType blue_value;
+            fread(&blue_value, sizeof(ColorValueType), 1, input_file);
+            ColorValueType green_value;
+            fread(&green_value, sizeof(ColorValueType), 1, input_file);
+            ColorValueType red_value;
+            fread(&red_value, sizeof(ColorValueType), 1, input_file);
 
             //change last bit of b_value to ptr_hidden_data
-            bool next_payload_bit = get_next_payload_bit(payload_data, &payload_array_index, &payload_element_bitshift);
-
-            bool is_succes = set_last_bit(next_payload_bit, ptr_blue_value);
-            if (!is_succes){
-                LOG_MESSAGE( ERROR, "Cannot change last bit");
-                *//*TRACKED_FREE(pixel_array);*//*
+            bool next_payload_bit;
+            is_success = payloadarray_get_next_bit(payload_data, &payload_array_index,
+                                                   &payload_element_bitshift, &next_payload_bit);
+            if (!is_success) {
+                LOG_MESSAGE(ERROR, "Cannot get next bit");
+                fclose(input_file);
+                fclose(output_file);
+                cleanup_run_commands(&cleanup_list);
                 return 6;
             }
 
-        }
+            bool is_succes = set_last_bit(next_payload_bit, &blue_value);
+            if (!is_succes) {
+                LOG_MESSAGE(ERROR, "Cannot change last bit");
+                fclose(input_file);
+                fclose(output_file);
+                cleanup_run_commands(&cleanup_list);
+                return 6;
+            }
 
+            //write the changed values to output file
+            fwrite(&blue_value, sizeof(ColorValueType), 1, output_file);
+            fwrite(&green_value, sizeof(ColorValueType), 1, output_file);
+            fwrite(&red_value, sizeof(ColorValueType), 1, output_file);
+        }
     }
-
-    //save the pixel array to file
-    fwrite(pixel_array, sizeof(uint8_t), height * bytes_per_row, output_file);*/
     //endregion
 
-    //region file read in every pixel
-    /*for(int y = 0; y < height; ++y)
-    {
-        //read the whole row
-        *//*fread(row_array, sizeof(unsigned char), row_bytes, input_file);*//*
-        for(int x = 0; x < width; ++x)
-        {
-            fread(pixel, sizeof(pixel[0]), pixel_arr_length, input_file);
-            *//*unsigned char r_value = row_array[j + 2];
-            unsigned char g_value = row_array[j + 1];*//*
-            *//*unsigned char* ptr_blue_value = &row_array[x];*//*
-            uint8_t * ptr_blue_value = &pixel[0];//becouse bmp B G R
-
-            //change last bit of b_value to ptr_hidden_data
-            bool next_payload_bit = get_next_payload_bit(payload_data, &payload_array_index, &payload_element_bitshift);
-
-            bool is_succes = set_last_bit(next_payload_bit, ptr_blue_value);
-            if (!is_succes){
-                LOG_MESSAGE( ERROR, "Cannot change last bit");
-                return 6;
-            }
-
-            fwrite(pixel, sizeof(pixel[0]), pixel_arr_length, output_file);
-
-        }
-*//*
-        //write whole row to output file
-        fwrite(row_array, sizeof(unsigned char), row_bytes, output_file);*//*
-    }*/
-    //endregion
-
-    // Close the files
     fclose(input_file);
     fclose(output_file);
-
-    /*TRACKED_FREE(row_array);*/
-
+    cleanup_run_commands(&cleanup_list);
     return 0;
 }
 
 /**
  * Extracts binary data from the least significant bit (LSB) of each RGB value in a BMP file.
  * @param input_image_filepath  The path to the input PNG file.
- * @param ptr_hidden_data  The path to the output file.
+ * @param ptr_return_hidden_data  The path to the output file.
  * @return
  * 0 succesfull
  * 1 cannot open file
  * 2 if input file is not BMP or PNG; not 24 bit RGB
  * 6 other error
  */
-static int extract_data_lsb_png(const char *input_image_filepath, PayloadArray *ptr_hidden_data) {
+static int extract_data_lsb_png(const char *input_image_filepath, PayloadArray *ptr_return_hidden_data) {
     //Check if the arguments are valid
-    if (!input_image_filepath || !ptr_hidden_data) {
+    if (!input_image_filepath || !ptr_return_hidden_data) {
         LOG_MESSAGE(ERROR, "Invalid arguments.");
         return 6;
     }
+    //Check if files exists
+    if (!file_exists(input_image_filepath)) {
+        LOG_MESSAGE(ERROR, "Input file does not exist.");
+        return 1;
+    }
+
+    //Prepare ptr_hidden_data
+    ptr_return_hidden_data->length = 0;
+    ptr_return_hidden_data->capacity = 0;
+    ptr_return_hidden_data->array = NULL;
 
     FILE *input_file = fopen(input_image_filepath, "rb");
 
@@ -688,10 +786,7 @@ static int extract_data_lsb_png(const char *input_image_filepath, PayloadArray *
     if (!input_file) {
         // Unable to open file
         LOG_MESSAGE(ERROR, "Unable to open file.");
-
-        // Close the files
         fclose(input_file);
-
         return 1;
     }
 
@@ -699,41 +794,34 @@ static int extract_data_lsb_png(const char *input_image_filepath, PayloadArray *
     bool is_success = is_png_file(input_file);
     if (!is_success) {
         LOG_MESSAGE(ERROR, "Input file is not a PNG file.");
-
-        // Close the files
         fclose(input_file);
-
         return 2;
     }
 
 
-    // Create PNG read and write structures
+    // Create PNG read structures
     png_structp png_read_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    png_structp png_write_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
-    if (!png_read_ptr || !png_write_ptr) {
-        printf("Failed to create PNG read or write structure.\n");
+    if (!png_read_ptr) {
+        LOG_MESSAGE(ERROR, "Failed to create PNG read or write structure.");
         fclose(input_file);
         return 6;
     }
 
     // Create PNG info structures
-    png_infop png_info_ptr = png_create_info_struct(png_read_ptr);
-    png_infop png_end_info_ptr = png_create_info_struct(png_write_ptr);
+    png_infop png_read_info_ptr = png_create_info_struct(png_read_ptr);
 
-    if (!png_info_ptr || !png_end_info_ptr) {
-        printf("Failed to create PNG info structure.\n");
+    if (!png_read_info_ptr) {
+        LOG_MESSAGE(ERROR, "Failed to create PNG info structure.");
         png_destroy_read_struct(&png_read_ptr, NULL, NULL);
-        png_destroy_write_struct(&png_write_ptr, NULL);
         fclose(input_file);
         return 6;
     }
 
     // Set up error handling
-    if (setjmp(png_jmpbuf(png_read_ptr)) || setjmp(png_jmpbuf(png_write_ptr))) {
+    if (setjmp(png_jmpbuf(png_read_ptr))) {
         LOG_MESSAGE(ERROR, "Error occurred during PNG read or write operation.");
-        png_destroy_read_struct(&png_read_ptr, &png_info_ptr, &png_end_info_ptr);
-        png_destroy_write_struct(&png_write_ptr, &png_info_ptr);
+        png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
         fclose(input_file);
         return 6;
     }
@@ -741,38 +829,37 @@ static int extract_data_lsb_png(const char *input_image_filepath, PayloadArray *
     // Initialize PNG IO
     png_init_io(png_read_ptr, input_file);
 
+    //set signature bytes
+    png_set_sig_bytes(png_read_ptr, PNG_SIGNATURE_SIZE);
+
     // Read PNG header
-    png_read_info(png_read_ptr, png_info_ptr);
+    png_read_info(png_read_ptr, png_read_info_ptr);
 
     //Check if the input file is 24-bit RGB PNG file
-    int color_type = png_get_color_type(png_read_ptr, png_info_ptr);
-    if (color_type != PNG_COLOR_TYPE_RGB) {
+    int bit_depth = png_get_bit_depth(png_read_ptr, png_read_info_ptr);
+    if (bit_depth * PIXEL_COLOR_NUM != RGB_BIT_SIZE) {
         LOG_MESSAGE(ERROR, "Input file is not a 24-bit RGB PNG image.");
-
-        //Clean up
-        png_destroy_read_struct(&png_read_ptr, &png_info_ptr, &png_end_info_ptr);
-        png_destroy_write_struct(&png_write_ptr, &png_info_ptr);
-
-        //Close the files
+        png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
         fclose(input_file);
-
         return 2;
     }
 
-    // Write PNG header
-    png_write_info(png_write_ptr, png_info_ptr);
-
-
     // Get image dimensions
-    png_uint_32 height = png_get_image_height(png_read_ptr, png_info_ptr);
-
-    // Allocate memory for pixel row_array
-    png_bytepp row_pointers = (png_bytepp) png_malloc(png_read_ptr, height *
-                                                                    sizeof(png_bytep));
+    png_uint_32 height = png_get_image_height(png_read_ptr, png_read_info_ptr);
 
     // Read PNG image row_array
+    // Allocate memory for pixel row_array
+    png_bytepp row_pointers = (png_bytepp) png_malloc(png_read_ptr, height * sizeof(png_bytep));
+
+    // Error reading PNG image
+    if (setjmp(png_jmpbuf(png_read_ptr))) {
+        LOG_MESSAGE(ERROR, "Error occurred during PNG read or write operation.");
+        png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
+        fclose(input_file);
+        return 6;
+    }
     for (int y = 0; y < height; ++y) {
-        row_pointers[y] = (png_bytep) png_malloc(png_read_ptr, png_get_rowbytes(png_read_ptr, png_info_ptr));
+        row_pointers[y] = (png_bytep) png_malloc(png_read_ptr, png_get_rowbytes(png_read_ptr, png_read_info_ptr));
         png_read_row(png_read_ptr, row_pointers[y], NULL);
     }
 
@@ -781,46 +868,54 @@ static int extract_data_lsb_png(const char *input_image_filepath, PayloadArray *
     size_t payload_array_index = 0;
     size_t payload_element_bitshift = 0;
 
+    size_t payload_size_bytes = UINT_MAX;
+
     // Extract binary row_array in the LSB of each pixel
-    for (int y = 0; y < height; ++y) {
-        size_t row_bytes = png_get_rowbytes(png_read_ptr, png_info_ptr);
+    for (int y = 0; y < height; y++) {
+        //end when all payload data is hidden
+        if (ptr_return_hidden_data->length >= payload_size_bytes) {
+            break;
+        }
+
+        size_t row_bytes = png_get_rowbytes(png_read_ptr, png_read_info_ptr);
         for (int x = 0; x < row_bytes; x += 3) {
-            unsigned char blue_value = row_pointers[y][x + 2];
+            //end when all payload data is hidden
+            if (ptr_return_hidden_data->length >= payload_size_bytes) {
+                break;
+            }
+            ColorValueType blue_value = row_pointers[y][x + 2];
 
             // Extract the LSB of the pixel value
             bool lsb_bit = get_last_bit(blue_value);
 
             // Write the LSB to the dynamic binary array
-            is_success = payload_array_add_bit(ptr_hidden_data, lsb_bit, &payload_array_index, &payload_element_bitshift);
+            is_success = payload_array_add_bit(ptr_return_hidden_data, lsb_bit, &payload_array_index,
+                                               &payload_element_bitshift);
             if (!is_success) {
                 LOG_MESSAGE(ERROR, "Cannot add bit to dynamic binary array.");
-                // Clean up
-                TRACKED_FREE(ptr_hidden_data->array);
-                for (int z = 0; z < height; ++z) {
-                    png_free(png_read_ptr, row_pointers[z]);
-                }
-                png_free(png_read_ptr, row_pointers);
-                png_destroy_read_struct(&png_read_ptr, &png_info_ptr, &png_end_info_ptr);
-                png_destroy_write_struct(&png_write_ptr, &png_info_ptr);
+                TRACKED_FREE(ptr_return_hidden_data->array);
+                free_png_read_values(&png_read_ptr, &png_read_info_ptr, height, row_pointers);
                 fclose(input_file);
                 return 6;
+            }
+
+            //READ payload size from file
+            if (ptr_return_hidden_data->length == PAYLOAD_SIZE_OFFSET) {
+
+                is_success = payload_get_payloadsize(*ptr_return_hidden_data, &payload_size_bytes);
+                if (!is_success) {
+                    LOG_MESSAGE(ERROR, "Cannot get payload size");
+                    TRACKED_FREE(ptr_return_hidden_data->array);
+                    free_png_read_values(&png_read_ptr, &png_read_info_ptr, height, row_pointers);
+                    fclose(input_file);
+                    return 6;
+                }
             }
         }
     }
 
-
-    // Clean up
-    for (int y = 0; y < height; ++y) {
-        png_free(png_read_ptr, row_pointers[y]);
-    }
-    png_free(png_read_ptr, row_pointers);
-    png_destroy_read_struct(&png_read_ptr, &png_info_ptr, &png_end_info_ptr);
-    png_destroy_write_struct(&png_write_ptr, &png_info_ptr);
-
-
-    // Close the files
+    free_png_read_values(&png_read_ptr, &png_read_info_ptr, height, row_pointers);
     fclose(input_file);
-
     return 0;
 }
 
@@ -828,125 +923,260 @@ static int extract_data_lsb_png(const char *input_image_filepath, PayloadArray *
  * Extracts binary data from the least significant bit (LSB) of each RGB value in a BMP file.
  * @param input_image_filepath  The path to the input BMP file.
  * @param binary_data  Pointer to an array of binary data to be hidden.
- * @param ptr_hidden_data  The path to the output BMP file.
+ * @param ptr_return_hidden_data  The path to the output BMP file.
  * @return
  * 0 succesfull
  * 1 cannot open file
  * 2 if input file is not BMP or PNG; not 24 bit RGB
  * 6 other error
  */
-static int extract_data_lsb_bmp(const char *input_image_filepath, PayloadArray *ptr_hidden_data) {
-    //todo check if binary_data fits in BMP
+static int extract_data_lsb_bmp(const char *input_image_filepath, PayloadArray *ptr_return_hidden_data) {
 
     //Check if the arguments are valid
-    if (!input_image_filepath) {
+    if (!input_image_filepath || !ptr_return_hidden_data) {
         LOG_MESSAGE(ERROR, "Invalid arguments.");
         return 6;
     }
 
-    FILE *input_file = fopen(input_image_filepath, "rb");
-
-    // Check if the file was opened successfully
-    if (!input_file ) {
-        // Unable to open file
-        LOG_MESSAGE(ERROR, "Unable to open file.");
-
-        // Close the files
-        fclose(input_file);
-
+    //Check if file exists
+    if (!file_exists(input_image_filepath)) {
+        LOG_MESSAGE(ERROR, "Input file does not exist.");
         return 1;
     }
 
+    //Prepare ptr_return
+    ptr_return_hidden_data->length = 0;
+    ptr_return_hidden_data->capacity = 0;
+    ptr_return_hidden_data->array = NULL;
+
+    CleanupCommand *cleanup_list = NULL;
+    FILE *input_file = fopen(input_image_filepath, "rb");
+
+    // Check if the file was opened successfully
+    if (!input_file) {
+        LOG_MESSAGE(ERROR, "Unable to open file.");
+        fclose(input_file);
+        return 1;
+    }
+
+    //read BMP metadata
+    BmpMetadata bmp_metadata;
+    bool is_success = read_bmp_metadata(input_file, &bmp_metadata);
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Cannot read BMP metadata.");
+        fclose(input_file);
+        return 6;
+    }
+
     // Check if the input file is a BMP file
-    char signature[BMP_SIGNATURE_SIZE];
-    fread(signature, sizeof(char), BMP_SIGNATURE_SIZE, input_file);
-    if (/*strcmp(signature, BMP_SIGNATURE) != 0*/ true) {//todo change
+    if (bmp_metadata.signature != BMP_SIGNATURE) {
         LOG_MESSAGE(ERROR, "Input file is not a BMP file.");
-
-        // Close the files
         fclose(input_file);
-
         return 2;
     }
 
-    //Check if the input file is 24 bit RGB PNG file
-    fseek(input_file, 28, SEEK_SET);
-    unsigned short bit_count;
-    fread(&bit_count, sizeof(bit_count), 1, input_file);
-
-    if (bit_count != RGB_BIT_SIZE) {
-        LOG_MESSAGE(ERROR, "Input file is not 24 bit RGB PNG file.");
-
-        // Close the files
+    // Check if it's a 24-bit uncompressed BMP file
+    if (bmp_metadata.bitcount != RGB_BIT_SIZE) {
+        LOG_MESSAGE(ERROR, "Input file is not 24 bit RGB BMP file or there is compression.");
         fclose(input_file);
-
         return 2;
     }
 
-    // Read BMP header
-    unsigned char header[BMP_HEADER_SIZE];
-    fread(header, sizeof(unsigned char), BMP_HEADER_SIZE, input_file);
+    // Move to the start of pixel data - after only editing the color value
+    fseek(input_file, bmp_metadata.dataoffset, SEEK_SET);
+
+    //create array for one row
+    int bytes_per_row = (int) ((double) bmp_metadata.width * (double) NUM_COLOR_PIXEL);
+    ColorValueType *row_array = TRACKED_MALLOC(bytes_per_row * sizeof(ColorValueType));
+    if (!row_array) {
+        LOG_MESSAGE(ERROR, "Cannot allocate memory for row array");
+        fclose(input_file);
+        return 6;
+    }
+    CLEANUP_ADD_COMMAND(&cleanup_list, row_array);
 
     //vars for bitshifts
     size_t payload_array_index = 0;
     size_t payload_element_bitshift = 0;
 
-    //weight and width from header
-    int width = *(int*)&header[18];
-    int height = *(int*)&header[22];
-    int row_bytes = (width * 3 + 3) & (~3);//number of 8-bit numbers in row
-    unsigned char row_array[row_bytes];//pointer na pole
-    //unsigned char 8 bits - one color number - 24 bits for rgb triplet
-    for(int i = 0; i < height; i++)
-    {
-        //read the whole row
-        fread(row_array, sizeof(unsigned char), row_bytes, input_file);
-        for(int j = 0; j < row_bytes; j += 3)
-        {
-            unsigned char r_value = row_array[j + 2];
-            unsigned char g_value = row_array[j + 1];
-            unsigned char b_value = row_array[j];
+    size_t payload_size_bytes = UINT_MAX;
+
+    for (int y = 0; y < bmp_metadata.height; y++) {
+        //end when all payload data is hidden
+        if (ptr_return_hidden_data->length >= payload_size_bytes) {
+            break;
+        }
+
+        for (int i = 0; i < bmp_metadata.width; ++i) {
+            //end when all payload data is hidden
+            if (ptr_return_hidden_data->length >= payload_size_bytes) {
+                break;
+            }
+            ColorValueType blue_value;
+            fread(&blue_value, sizeof(ColorValueType), 1, input_file);
+            ColorValueType green_value;
+            fread(&green_value, sizeof(ColorValueType), 1, input_file);
+            ColorValueType red_value;
+            fread(&red_value, sizeof(ColorValueType), 1, input_file);
 
             //save lsb to payload_array
-            bool lsb_bit = get_last_bit(b_value);
-
-            bool is_succes = payload_array_add_bit(ptr_hidden_data, lsb_bit, &payload_array_index, &payload_element_bitshift);
-            if (!is_succes){
-                LOG_MESSAGE( ERROR, "Cannot add bit to payload array");
+            bool lsb_bit = get_last_bit(blue_value);
+            bool is_succes = payload_array_add_bit(ptr_return_hidden_data, lsb_bit, &payload_array_index,
+                                                   &payload_element_bitshift);
+            if (!is_succes) {
+                LOG_MESSAGE(ERROR, "Cannot add bit to payload array");
+                cleanup_run_commands(&cleanup_list);
+                fclose(input_file);
                 return 6;
             }
 
-            /*//change last bit of b_value to ptr_hidden_data
-            bool next_payload_bit = get_next_payload_bit(ptr_hidden_data, &payload_array_index, &payload_element_index);
-
-            bool is_succes = set_last_bit(next_payload_bit, &b_value);
-            if (!is_succes){
-                LOG_MESSAGE( ERROR, "Cannot change last bit");
-                return false;
-            }*/
-
+            //READ payload size from file
+            if (ptr_return_hidden_data->length == PAYLOAD_SIZE_OFFSET) {
+                is_success = payload_get_payloadsize(*ptr_return_hidden_data, &payload_size_bytes);
+                if (!is_success) {
+                    LOG_MESSAGE(ERROR, "Cannot get payload size");
+                    cleanup_run_commands(&cleanup_list);
+                    fclose(input_file);
+                    return 6;
+                }
+            }
         }
     }
+
+    cleanup_run_commands(&cleanup_list);
     fclose(input_file);
     return 0;
-
 }
 
 
+
+
 //region UTILS FUNCTIONS
-static bool set_last_bit(bool change_value, uint8_t *value){
-    if (value == NULL){
-        LOG_MESSAGE(ERROR, "Value is NULL.");
+
+/**
+ * Frees the memory allocated by libpng.
+ * @param png_read_ptr  The PNG read structure.
+ * @param png_read_info_ptr  The PNG info structure.
+ * @param row_pointers_size  The number of rows in the PNG image.
+ * @param row_pointers  The PNG image rows.
+ */
+static void free_png_read_values(png_structp *png_read_ptr, png_infop *png_read_info_ptr, png_uint_32 row_pointers_size,
+                                 png_bytepp row_pointers) {
+    if (!png_read_ptr || !png_read_info_ptr || !row_pointers) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return;
+    }
+
+    for (int y = 0; y < row_pointers_size; y++) {
+        png_free((*png_read_ptr), row_pointers[y]);
+    }
+    png_free((*png_read_ptr), row_pointers);
+    png_destroy_read_struct(png_read_ptr, png_read_info_ptr, NULL);
+}
+
+/**
+ * Frees the memory allocated by libpng.
+ * @param png_read_ptr  The PNG read structure.
+ * @param png_read_info_ptr  The PNG info structure.
+ * @param row_pointers_size  The number of rows in the PNG image.
+ * @param row_pointers  The PNG image rows.
+ * @param png_write_ptr  The PNG write structure.
+ * @param png_write_end_info_ptr  The PNG end info structure.
+ */
+static void free_png_read_write_values(png_structp *png_read_ptr, png_infop *png_read_info_ptr, png_uint_32 row_pointers_size,
+                                 png_bytepp row_pointers, png_structp *png_write_ptr, png_infop *png_write_end_info_ptr) {
+    if (!png_read_ptr || !png_read_info_ptr || !row_pointers || !png_write_ptr || !png_write_end_info_ptr) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return;
+    }
+
+    free_png_read_values(png_read_ptr, png_read_info_ptr, row_pointers_size, row_pointers);
+    png_destroy_write_struct(png_write_ptr, png_write_end_info_ptr);
+}
+
+/**
+ * Function copies payload size from payload array to ptr_return_size
+ * @param array  payload array
+ * @param ptr_return_size  pointer to size_t where the payload size will be copied
+ * @return  true if succesfull, false otherwise
+ */
+static bool payload_get_payloadsize(PayloadArray array, size_t *ptr_return_size) {
+    if (!array.array || !ptr_return_size) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return false;
+    }
+    //Prepare ptr_return
+    *ptr_return_size = 0;
+
+    size_t size = PAYLOAD_SIZE_OFFSET;
+
+    if (array.length < size) {
+        LOG_MESSAGE(ERROR, "Payload is too small.");
         return false;
     }
 
-    if (change_value == 1){
+    memcpy(ptr_return_size, array.array, PAYLOAD_SIZE_OFFSET);
+
+    return true;
+}
+
+/**
+ * Function reads BMP metadata from input file and saves it to metadata
+ * @param input_file  input file
+ * @param ptr_return_bmpmetadata  pointer to BmpMetadata where the metadata will be saved
+ * @return  true if succesfull, false otherwise
+ */
+static bool read_bmp_metadata(FILE *input_file, BmpMetadata *ptr_return_bmpmetadata) {
+    // Check if the file was opened successfully
+    if (!input_file || !ptr_return_bmpmetadata) {
+        LOG_MESSAGE(ERROR, "Unable to open file.");
+        fclose(input_file);
+        return false;
+    }
+
+    int bmp_signature_offset_bytes = BMP_SIGNATURE_OFFSET_BYTES;
+    int bmp_dataoffset_offset_bytes = BMP_DATAOFFSET_OFFSET_BYTES;
+    int bmp_width_offset_bytes = BMP_WIDTH_OFFSET_BYTES;
+    int bmp_height_offset_bytes = BMP_HEIGHT_OFFSET_BYTES;
+    int bmp_bitcount_offset_bytes = BMP_BITCOUNT_OFFSET_BYTES;
+
+    fseek(input_file, bmp_signature_offset_bytes, SEEK_SET);
+    fread(&(ptr_return_bmpmetadata->signature), sizeof(BmpSignatureType), 1, input_file);
+
+    fseek(input_file, bmp_dataoffset_offset_bytes, SEEK_SET);
+    fread(&(ptr_return_bmpmetadata->dataoffset), sizeof(BmpDataOffsetType), 1, input_file);
+
+    fseek(input_file, bmp_width_offset_bytes, SEEK_SET);
+    fread(&(ptr_return_bmpmetadata->width), sizeof(BmpWidthType), 1, input_file);
+
+    fseek(input_file, bmp_height_offset_bytes, SEEK_SET);
+    fread(&(ptr_return_bmpmetadata->height), sizeof(BmpHeightType), 1, input_file);
+
+    fseek(input_file, bmp_bitcount_offset_bytes, SEEK_SET);
+    fread(&(ptr_return_bmpmetadata->bitcount), sizeof(BmpBitCountType), 1, input_file);
+
+    return true; // You might want to add error handling and return appropriate codes
+}
+
+/**
+ * Function sets the last bit of value to change_value
+ * @param change_value  value to be set to last bit
+ * @param value  pointer to value where the last bit will be changed
+ * @return  true if succesfull, false otherwise
+ */
+static bool set_last_bit(bool change_value, uint8_t *value) {
+    if (value == NULL) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return false;
+    }
+
+    if (change_value == 1) {
         *value = *value | 0x01;
         return true;
     }
 
     //change to 0
-    if (change_value == 0){
+    if (change_value == 0) {
         *value = *value & 0xFE;
         return true;
     }
@@ -954,98 +1184,29 @@ static bool set_last_bit(bool change_value, uint8_t *value){
     return false;
 }
 
-static bool payload_array_add_bit(PayloadArray *data, bool bit, size_t *array_index, size_t *element_bitshift) {
-    bool is_succes;
+/**
+ * This function extracts and returns the last bit of the provided ColorValueType.
+ *
+ * @param value The ColorValueType from which the last bit will be extracted.
+ * @return The extracted last bit.
+ */
+static bool get_last_bit(ColorValueType value) { return value & 0x01; }
 
-    // Ensure the payload array is initialized
-    if (!data || !data->array) {
-        LOG_MESSAGE(ERROR, "Payload array is not initialized.");
+/**
+ * This function reads the signature of the input file and compares it with the PNG signature
+ * to determine if the file is a PNG file.
+ *
+ * @param input_file A pointer to the FILE structure representing the input file.
+ * @return true if the file is a PNG file, false otherwise.
+ */
+static bool is_png_file(FILE *input_file) {
+    //Check if the arguments are valid
+    if (!input_file) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
         return false;
     }
 
-    // Ensure dynamic array is initialized
-    if (data->length == 0) {
-        is_succes = payloadarray_initialize(data);
-        if (!is_succes) {
-            LOG_MESSAGE(ERROR, "Failed to initialize dynamic array for payload.");
-            return false;
-        }
-    }
-
-    // Ensure valid array index
-    if (*array_index >= data->length) {
-        // Need to add a new element to the dynamic array
-        PayloadType new_element = 0;
-        is_succes = payloadarray_add_element(data, new_element);
-        if (!is_succes) {
-            LOG_MESSAGE(ERROR, "Failed to add new element to payload array.");
-            return false;
-        }
-    }
-
-    // Set the bit in the current element
-    if (bit) {
-        data->array[*array_index] |= (1 << *element_bitshift);
-    } else {
-        data->array[*array_index] &= ~(1 << *element_bitshift);
-    }
-
-    // Update array index and bit shift for the next iteration
-    if (*element_bitshift == (sizeof(PayloadType) - 1)) {
-        // Move to the next element in the array
-        (*array_index)++;
-        *element_bitshift = 0;
-    } else {
-        // Move to the next bit in the current element
-        (*element_bitshift)++;
-    }
-
-    return true;
-
-}
-
-static bool payloadarray_initialize(PayloadArray *data) {
-    data->length = 0;
-    data->array = TRACKED_MALLOC(sizeof(PayloadType) * INITIAL_PAYLOADARRAY_SIZE);
-    if (!data->array){
-        LOG_MESSAGE(ERROR, "Failed to allocate memory for payload array.");
-        return false;
-    }
-    data->capacity = INITIAL_PAYLOADARRAY_SIZE;
-
-    return true;
-}
-
-static bool payloadarray_add_element(PayloadArray * payload_array, PayloadType element){
-    return dynamicarray_add_element((DynamicArray *) payload_array, &element, sizeof(PayloadType));
-}
-
-
-static bool get_last_bit(unsigned char value) { return value & 0x01; }
-
-static bool get_next_payload_bit(PayloadArray payload_array, size_t *array_index, size_t *element_bit_shift) {
-    if (*array_index >= payload_array.length){
-        return NULL;
-    }
-    if (*element_bit_shift >= sizeof(PayloadType)){
-        return NULL;
-    }
-
-    bool next_bit = ((payload_array.array)[*array_index] >> *element_bit_shift) & 0x01;
-
-    if (*element_bit_shift == (sizeof(PayloadType) - 1)){
-        *element_bit_shift = 0;
-    } else{
-        (*element_bit_shift)++;
-    }
-
-    (*array_index)++;
-
-    return next_bit;
-}
-
-
-static bool is_png_file(FILE *input_file) {// Check if the input file is a PNG file
+    // Check if the input file is a PNG file
     unsigned char signature[PNG_SIGNATURE_SIZE];
     fread(signature, 1, PNG_SIGNATURE_SIZE, input_file);
     bool is_success = !png_sig_cmp(signature, 0, PNG_SIGNATURE_SIZE);
@@ -1058,5 +1219,6 @@ static bool is_png_file(FILE *input_file) {// Check if the input file is a PNG f
     return true;
 }
 //endregion
-
 //endregion
+
+//endregion+

@@ -19,7 +19,11 @@ add_executable(FAV_PC_SP_23_24_BinaryDataInImg
         src/utils/data_structures.c
         src/utils/data_structures.h
         src/utils/dictionary.c
-        src/utils/dictionary.h)
+        src/utils/dictionary.h
+        src/utils/utils.c
+        src/test/test_file.c
+        src/test/test_file.h
+)
 
 find_package(PNG REQUIRED)
 include_directories(${PNG_INCLUDE_DIRS})
