@@ -65,7 +65,7 @@ void print_rgb_values(const char *input_image_filepath) {
 
     //create array for one row
     int bytes_per_row = (int) ((double) bmp_metadata.width * (double) NUM_COLOR_PIXEL);
-    ColorValueType *row_array = TRACKED_MALLOC(bytes_per_row * sizeof(ColorValueType));
+    colorvalue_type *row_array = TRACKED_MALLOC(bytes_per_row * sizeof(colorvalue_type));
     if (!row_array) {
         LOG_MESSAGE(ERROR, "Cannot allocate memory for row array");
         return;
@@ -86,12 +86,12 @@ void print_rgb_values(const char *input_image_filepath) {
             if (payload_array_index >= (size_t) (10.0 * 8.0)) {
                 break;
             }
-            ColorValueType blue_value;
-            fread(&blue_value, sizeof(ColorValueType), 1, input_file);
-            ColorValueType green_value;
-            fread(&green_value, sizeof(ColorValueType), 1, input_file);
-            ColorValueType red_value;
-            fread(&red_value, sizeof(ColorValueType), 1, input_file);
+            colorvalue_type blue_value;
+            fread(&blue_value, sizeof(colorvalue_type), 1, input_file);
+            colorvalue_type green_value;
+            fread(&green_value, sizeof(colorvalue_type), 1, input_file);
+            colorvalue_type red_value;
+            fread(&red_value, sizeof(colorvalue_type), 1, input_file);
             /*if (blue_value != 255){
                 printf( "blue: %d, green: %d, red: %d\n", blue_value, green_value, red_value);
             }*/
@@ -116,9 +116,9 @@ void print_rgb_values(const char *input_image_filepath) {
 
 
 /**
- * Prints the contents of a PayloadArray.
+ * Prints the contents of a struct payloadarray.
  *
- * @param payloadArray The PayloadArray to be printed.
+ * @param struct payloadarray The PayloadArray to be printed.
  * @return True if the printing process is successful, false otherwise.
  */
 bool payloadarray_print(PayloadArray payloadArray) {

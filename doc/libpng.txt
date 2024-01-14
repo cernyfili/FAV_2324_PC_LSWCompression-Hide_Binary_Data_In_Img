@@ -1,0 +1,2 @@
+WINDOWS path
+C:\Program Files (x86)\GnuWin32

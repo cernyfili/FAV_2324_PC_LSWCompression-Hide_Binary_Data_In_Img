@@ -24,13 +24,13 @@ typedef enum {
     INFO,    /**< Informational message level. */
     WARNING, /**< Warning message level. */
     ERROR    /**< Error message level. */
-} LogLevel;
+} loglevel_enum;
 
 /**
  * Struct to hold both enum value and string representation
  */
 typedef struct {
-    LogLevel level;
+    loglevel_enum level;
     const char *string;
     bool is_enabled;
 } LogLevelInfo;
@@ -45,7 +45,7 @@ typedef struct {
  * @param format Format string for the log message.
  * @param ... Additional arguments for the format string.
  */
-void log_message(LogLevel level, const char* file, int line, const char *format, ...);
+void log_message(loglevel_enum level, const char* file, int line, const char *format, ...);
 
 /**
  * Initializes the logger, setting up any necessary resources or configurations.

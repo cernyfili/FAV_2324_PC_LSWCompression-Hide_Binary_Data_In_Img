@@ -104,7 +104,7 @@ void test_hide_data_bmp(){
 }
 
 void test_clenup_lib(){
-    CleanupCommand * clenup_list = NULL;
+    struct cleanupcommand * clenup_list = NULL;
 
     char * test_str_1 = TRACKED_MALLOC(10);
     CLEANUP_ADD_COMMAND(&clenup_list, test_str_1);

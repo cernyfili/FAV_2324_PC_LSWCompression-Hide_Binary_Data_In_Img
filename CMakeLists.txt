@@ -21,8 +21,6 @@ add_executable(FAV_PC_SP_23_24_BinaryDataInImg
         src/utils/dictionary.c
         src/utils/dictionary.h
         src/utils/utils.c
-        src/test/test_file.c
-        src/test/test_file.h
 )
 
 find_package(PNG REQUIRED)

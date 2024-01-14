@@ -2,9 +2,9 @@
 
 - [x] malloc functions - counter
 - [x] png reader - fix libpng
-- [x] bmp reader
+- [x] bmp_dataoffset_type reader
 - [x] lzw compression
-- [x] extract bmp
+- [x] extract bmp_dataoffset_type
 - [x] save payload after extract
 - [x] payload prepare
 - [x] payload encrypt

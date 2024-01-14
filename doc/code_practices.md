@@ -1,4 +1,4 @@
-# DicCodeType Practices
+# dic_code_type Practices
 ## Pamět
 - uvolňovat všude
 - vytvořit strukturu pro počítání zabrané paměti

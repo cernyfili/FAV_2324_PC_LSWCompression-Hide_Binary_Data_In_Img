@@ -33,7 +33,7 @@ char** log_filepath = NULL;
 /**
  * Array of log level info structs.
  */
-const LogLevelInfo LogLevelInfoArray[] = {
+const LogLevelInfo loglevelinfo_array[] = {
         {INFO, "INFO", false},
         {WARNING, "WARNING", true},
         {ERROR, "ERROR", true}
@@ -111,7 +111,7 @@ void logger_free() {
  * @param format Format string for the log message.
  * @param ... Additional arguments for the format string.
  */
-void log_message(LogLevel level, const char* file, int line, const char *format, ...) {
+void log_message(loglevel_enum level, const char* file, int line, const char *format, ...) {
     if (!file){
         printf("Error opening log file\n");
         return;
@@ -132,16 +132,16 @@ void log_message(LogLevel level, const char* file, int line, const char *format,
     bool is_file_loge_enabled = IS_FILE_LOG_ENABLED;
 
     // Log text for the given log level
-    for (size_t i = 0; i < sizeof(LogLevelInfoArray) / sizeof(LogLevelInfoArray[0]); ++i) {
-        if (level == LogLevelInfoArray[i].level && LogLevelInfoArray[i].is_enabled) {
+    for (size_t i = 0; i < sizeof(loglevelinfo_array) / sizeof(loglevelinfo_array[0]); ++i) {
+        if (level == loglevelinfo_array[i].level && loglevelinfo_array[i].is_enabled) {
             // Log to console
             if (is_console_log_enabled) {
-                printf("[%s] ", LogLevelInfoArray[i].string);
+                printf("[%s] ", loglevelinfo_array[i].string);
             }
 
             //Log to file
             if (is_file_loge_enabled){
-                fprintf(log_file, "[%s] ", LogLevelInfoArray[i].string);
+                fprintf(log_file, "[%s] ", loglevelinfo_array[i].string);
             }
 
             // Handle variadic arguments
