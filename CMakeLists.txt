@@ -16,11 +16,13 @@ add_executable(FAV_PC_SP_23_24_BinaryDataInImg
         src/utils/memory_management.c
         src/utils/memory_management.h
         src/utils/utils.h
-        src/utils/data_structures.c
-        src/utils/data_structures.h
+        src/utils/binary_data.c
+        src/utils/binary_data.h
         src/utils/dictionary.c
         src/utils/dictionary.h
         src/utils/utils.c
+        src/utils/trie.c
+        src/utils/trie.h
 )
 
 find_package(PNG REQUIRED)

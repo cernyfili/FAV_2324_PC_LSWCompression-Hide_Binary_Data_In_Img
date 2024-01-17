@@ -34,6 +34,115 @@
 //region FUNCTIONS DEFINITIONS
 
 //region PUBLIC FUNCTIONS
+/*#define SIZE 20
+
+struct DataItem {
+    dic_code_type key;       // dictionary code
+    unsigned char *data;
+};
+
+*//*struct DataItem* hashArray[SIZE];*//*
+*//*struct DataItem* dummyItem;
+struct DataItem* item;*//*
+
+int hashCode(dic_code_type key) {
+    return key % SIZE;
+}
+
+struct DataItem *search(dic_code_type key, struct DataItem **hashArray) {
+    //get the hash
+    int hashIndex = hashCode(key);
+
+    //move in array until an empty
+    while(hashArray[hashIndex] != NULL) {
+
+        if(hashArray[hashIndex]->key == key)
+            return hashArray[hashIndex];
+
+        //go to next cell
+        ++hashIndex;
+
+        //wrap around the table
+        hashIndex %= SIZE;
+    }
+
+    return NULL;
+}
+
+void insert(dic_code_type key,unsigned char * data, struct DataItem **hashArray) {
+
+    struct DataItem *item = TRACKED_MALLOC(sizeof(struct DataItem));
+    if (item == NULL) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        return;
+    }
+    item->data = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen((char *) data)));
+    if (item->data == NULL) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        TRACKED_FREE(item);
+        return;
+    }
+    strcpy((char *) item->data, (char *) data);
+
+    item->key = key;
+
+    //get the hash
+    int hashIndex = hashCode(key);
+
+    //move in array until an empty or deleted cell
+    while(hashArray[hashIndex] != NULL && hashArray[hashIndex]->key != DELETED_KEY) {
+        //go to next cell
+        ++hashIndex;
+
+        //wrap around the table
+        hashIndex %= SIZE;
+    }
+
+    hashArray[hashIndex] = item;
+}
+
+struct DataItem* delete(struct DataItem* item, struct DataItem **hashArray) {
+    int key = item->key;
+
+    //get the hash
+    int hashIndex = hashCode(key);
+
+    //move in array until an empty
+    while(hashArray[hashIndex] != NULL) {
+
+        if(hashArray[hashIndex]->key == key) {
+            struct DataItem* temp = hashArray[hashIndex];
+
+            //assign a dummy item at deleted position
+            hashArray[hashIndex]->key = DELETED_KEY;
+            hashArray[hashIndex]->data = NULL;
+            return temp;
+        }
+
+        //go to next cell
+        ++hashIndex;
+
+        //wrap around the table
+        hashIndex %= SIZE;
+    }
+
+    return NULL;
+}
+
+void display(struct DataItem **hashArray) {
+    int i = 0;
+
+    for(i = 0; i<SIZE; i++) {
+
+        if(hashArray[i] != NULL)
+            printf(" (%d,%d)",hashArray[i]->key,hashArray[i]->data);
+        else
+            printf(" ~~ ");
+    }
+
+    printf("\n");
+}*/
+
 //region DICTIONARY FUNCTIONS
 /**
  * Initializes a dictionary with an initial size and assigns codes and values to each entry.
@@ -213,7 +322,7 @@ dictionary_is_code_in_dictionary(struct dictionary dictionary, dic_code_type cod
  * @param code Code for which the value is requested.
  * @return struct dictionary value corresponding to the code.
  */
-dic_value_type dictionary_get_value_to_code(struct dictionary dictionary, dic_code_type code) {
+dic_value_type  dictionary_get_value_to_code(struct dictionary dictionary, dic_code_type code) {
     dic_value_type value = DIC_VALUE_INVALID;
 
     //Check if data is not null
@@ -232,8 +341,8 @@ dic_value_type dictionary_get_value_to_code(struct dictionary dictionary, dic_co
     }
 
     for (int i = 0; i < dictionary.length; i++) {
-        dic_code_type current_value = dictionary.array[i].code;
-        if (current_value == code) {
+        dic_code_type current_code = dictionary.array[i].code;
+        if (current_code == code) {
             value = dictionary.array[i].value;
             return value;
         }

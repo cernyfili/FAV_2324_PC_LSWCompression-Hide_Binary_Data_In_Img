@@ -18,6 +18,7 @@
 
 
 //region STRUCTS
+#define DELETED_KEY -1
 /**
  * Represents the type of the dictionary value.
  */
@@ -35,7 +36,7 @@ struct dicvaluearray {
 /**
  * Represents the type of the dictionary code.
  */
-typedef uint16_t dic_code_type;
+typedef int dic_code_type;
 
 /**
  * Represents an array of static dictionary codes.

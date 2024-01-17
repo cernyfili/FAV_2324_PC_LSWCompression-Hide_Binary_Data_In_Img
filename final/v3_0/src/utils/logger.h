@@ -1,0 +1,50 @@
+//
+// Author: Filip Cerny
+// Date: 24.11.2023
+// Description: This file contains logger functions.
+//
+
+#ifndef FAV_PC_SP_23_24_BINARYDATAINIMG_LOGGER_H
+#define FAV_PC_SP_23_24_BINARYDATAINIMG_LOGGER_H
+
+#include <stdbool.h>
+
+/**
+ * Macro to log message with file and line number
+ * @param level - log level
+ * @param format - format string
+ * @param ... - format arguments
+ */
+#define LOG_MESSAGE(level, format, ...) log_message(level, __FILE__, __LINE__, format __VA_OPT__(,) __VA_ARGS__)
+
+/**
+ * Enum to represent log level
+ */
+typedef enum {
+    INFO,    /**< Informational message level. */
+    WARNING, /**< Warning message level. */
+    ERROR    /**< Error message level. */
+} loglevel_enum;
+
+/**
+ * Struct to hold both enum value and string representation
+ */
+struct loglevelinfo {
+    loglevel_enum level;
+    const char *string;
+    bool is_enabled;
+};
+
+/**
+ * Logs a formatted message with the specified log level, including file name and line number information.
+ * The format string and additional arguments follow the printf-style formatting.
+ *
+ * @param level Log level (INFO, WARNING, or ERROR).
+ * @param file File name where the log message is generated.
+ * @param line Line number where the log message is generated.
+ * @param format Format string for the log message.
+ * @param ... Additional arguments for the format string.
+ */
+void log_message(loglevel_enum level, const char *file, int line, const char *format, ...);
+
+#endif //FAV_PC_SP_23_24_BINARYDATAINIMG_LOGGER_H

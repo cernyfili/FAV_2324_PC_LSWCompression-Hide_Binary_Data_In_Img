@@ -10,27 +10,136 @@
  [8] = {dic_code_type} 116
  [9] = {dic_code_type} 101
 
-*ptr_compressed_data->array @ 20 = {payload_type [20]}
- [0] = {payload_type} 65 'A'
- [1] = {payload_type} 0 '\000'
- [2] = {payload_type} 104 'h'
- [3] = {payload_type} 0 '\000'
- [4] = {payload_type} 111 'o'
- [5] = {payload_type} 0 '\000'
- [6] = {payload_type} 106 'j'
- [7] = {payload_type} 0 '\000'
- [8] = {payload_type} 32 ' '
- [9] = {payload_type} 0 '\000'
- [10] = {payload_type} 115 's'
- [11] = {payload_type} 0 '\000'
- [12] = {payload_type} 118 'v'
- [13] = {payload_type} 0 '\000'
- [14] = {payload_type} 101 'e'
- [15] = {payload_type} 0 '\000'
- [16] = {payload_type} 116 't'
- [17] = {payload_type} 0 '\000'
- [18] = {payload_type} 101 'e'
- [19] = {payload_type} 0 '\000'
+*ptr_compressed_data->array @ 20 = {binarydata_type [20]}
+ [0] = {binarydata_type} 65 'A'
+ [1] = {binarydata_type} 0 '\000'
+ [2] = {binarydata_type} 104 'h'
+ [3] = {binarydata_type} 0 '\000'
+ [4] = {binarydata_type} 111 'o'
+ [5] = {binarydata_type} 0 '\000'
+ [6] = {binarydata_type} 106 'j'
+ [7] = {binarydata_type} 0 '\000'
+ [8] = {binarydata_type} 32 ' '
+ [9] = {binarydata_type} 0 '\000'
+ [10] = {binarydata_type} 115 's'
+ [11] = {binarydata_type} 0 '\000'
+ [12] = {binarydata_type} 118 'v'
+ [13] = {binarydata_type} 0 '\000'
+ [14] = {binarydata_type} 101 'e'
+ [15] = {binarydata_type} 0 '\000'
+ [16] = {binarydata_type} 116 't'
+ [17] = {binarydata_type} 0 '\000'
+ [18] = {binarydata_type} 101 'e'
+ [19] = {binarydata_type} 0 '\000'
 
  Vysledky validator
  25108 from 173140
+
+# HIDE
+*compressed_payload.array @ 20 = {binarydata_type [20]}
+ [0] = {binarydata_type} 49 '1'
+ [1] = {binarydata_type} 0 '\000'
+ [2] = {binarydata_type} 50 '2'
+ [3] = {binarydata_type} 0 '\000'
+ [4] = {binarydata_type} 51 '3'
+ [5] = {binarydata_type} 0 '\000'
+ [6] = {binarydata_type} 1 '\001'
+ [7] = {binarydata_type} 1 '\001'
+ [8] = {binarydata_type} 2 '\002'
+ [9] = {binarydata_type} 1 '\001'
+ [10] = {binarydata_type} 3 '\003'
+ [11] = {binarydata_type} 1 '\001'
+ [12] = {binarydata_type} 4 '\004'
+ [13] = {binarydata_type} 1 '\001'
+ [14] = {binarydata_type} 5 '\005'
+ [15] = {binarydata_type} 1 '\001'
+ [16] = {binarydata_type} 6 '\006'
+ [17] = {binarydata_type} 1 '\001'
+ [18] = {binarydata_type} 1 '\001'
+ [19] = {binarydata_type} 1 '\001'
+
+
+# EXTRACT
+*payload_data.array @ 20 = {binarydata_type [20]}
+ [0] = {binarydata_type} 49 '1'
+ [1] = {binarydata_type} 0 '\000'
+ [2] = {binarydata_type} 50 '2'
+ [3] = {binarydata_type} 0 '\000'
+ [4] = {binarydata_type} 51 '3'
+ [5] = {binarydata_type} 0 '\000'
+ [6] = {binarydata_type} 1 '\001'
+ [7] = {binarydata_type} 1 '\001'
+ [8] = {binarydata_type} 2 '\002'
+ [9] = {binarydata_type} 1 '\001'
+ [10] = {binarydata_type} 3 '\003'
+ [11] = {binarydata_type} 1 '\001'
+ [12] = {binarydata_type} 4 '\004'
+ [13] = {binarydata_type} 1 '\001'
+ [14] = {binarydata_type} 5 '\005'
+ [15] = {binarydata_type} 1 '\001'
+ [16] = {binarydata_type} 6 '\006'
+ [17] = {binarydata_type} 1 '\001'
+ [18] = {binarydata_type} 1 '\001'
+ [19] = {binarydata_type} 0 '\000'
+
+
+ #HIDE
+
+ Value: 49, Word: 1
+         Value: 255, Word: 12
+ Value: 50, Word: 2
+         Value: 256, Word: 23
+ Value: 51, Word: 3
+         Value: 257, Word: 33
+                 Value: 264, Word: 33
+                 Value: 258, Word: 333
+                         Value: 259, Word: 3333
+                                 Value: 260, Word: 33333
+                                         Value: 261, Word: 333333
+                                                 Value: 262, Word: 3333333
+                                                         Value: 263, Word: 33333333
+
+# EXTRACT
+Code: 256, Value: 12
+Code: 257, Value: 23
+Code: 258, Value: 32
+Code: 259, Value: 233
+Code: 260, Value: 322
+Code: 261, Value: 2333
+Code: 262, Value: 3222
+Code: 263, Value: 23333
+Code: 264, Value: 32222
+
+19825
+
+19759 from 36675
+28142 from 36675
+
+
+
+# COMPRESS
+*result_code.array @ 9 = {dic_code_type [9]}
+ [0] = {dic_code_type} 49
+ [1] = {dic_code_type} 50
+ [2] = {dic_code_type} 51
+ [3] = {dic_code_type} 258
+ [4] = {dic_code_type} 259
+ [5] = {dic_code_type} 260
+ [6] = {dic_code_type} 261
+ [7] = {dic_code_type} 262
+ [8] = {dic_code_type} 51
+
+ # DECOMPRESS
+ *compressed_data.array @ 9 = {dic_code_type [9]}
+  [0] = {dic_code_type} 49 1
+  [1] = {dic_code_type} 50 2
+  [2] = {dic_code_type} 51 3
+  [3] = {dic_code_type} 258 33
+  [4] = {dic_code_type} 259 333
+  [5] = {dic_code_type} 260 3333
+  [6] = {dic_code_type} 261 33333
+  [7] = {dic_code_type} 262 333333
+  [8] = {dic_code_type} 51 3
+
+
+  --leak-check=full --leak-resolution=high --track-origins=yes --vgdb=yes

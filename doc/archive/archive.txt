@@ -116,9 +116,9 @@ void print_rgb_values(const char *input_image_filepath) {
 
 
 /**
- * Prints the contents of a struct payloadarray.
+ * Prints the contents of a struct binarydataarray.
  *
- * @param struct payloadarray The PayloadArray to be printed.
+ * @param struct binarydataarray The PayloadArray to be printed.
  * @return True if the printing process is successful, false otherwise.
  */
 bool payloadarray_print(PayloadArray payloadArray) {

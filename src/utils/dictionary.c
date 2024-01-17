@@ -29,121 +29,28 @@
  * Represents the invalid value of the dictionary.
  */
 #define DIC_VALUE_INVALID NULL
+
+/**
+ * Represents the initial size of char array.
+ */
+#define CHARARRAY_INIT_SIZE 10000
 //endregion
 
 //region FUNCTIONS DEFINITIONS
 
 //region PUBLIC FUNCTIONS
-#define SIZE 20
-
-struct DataItem {
-    dic_code_type key;       // dictionary code
-    unsigned char *data;
-};
-
-/*struct DataItem* hashArray[SIZE];*/
-/*struct DataItem* dummyItem;
-struct DataItem* item;*/
-
-int hashCode(dic_code_type key) {
-    return key % SIZE;
-}
-
-struct DataItem *search(dic_code_type key, struct DataItem **hashArray) {
-    //get the hash
-    int hashIndex = hashCode(key);
-
-    //move in array until an empty
-    while(hashArray[hashIndex] != NULL) {
-
-        if(hashArray[hashIndex]->key == key)
-            return hashArray[hashIndex];
-
-        //go to next cell
-        ++hashIndex;
-
-        //wrap around the table
-        hashIndex %= SIZE;
-    }
-
-    return NULL;
-}
-
-void insert(dic_code_type key,unsigned char * data, struct DataItem **hashArray) {
-
-    struct DataItem *item = TRACKED_MALLOC(sizeof(struct DataItem));
-    if (item == NULL) {
-        LOG_MESSAGE(ERROR, "Memory allocation failed.");
-        return;
-    }
-    item->data = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen((char *) data)));
-    if (item->data == NULL) {
-        LOG_MESSAGE(ERROR, "Memory allocation failed.");
-        TRACKED_FREE(item);
-        return;
-    }
-    strcpy((char *) item->data, (char *) data);
-
-    item->key = key;
-
-    //get the hash
-    int hashIndex = hashCode(key);
-
-    //move in array until an empty or deleted cell
-    while(hashArray[hashIndex] != NULL && hashArray[hashIndex]->key != DELETED_KEY) {
-        //go to next cell
-        ++hashIndex;
-
-        //wrap around the table
-        hashIndex %= SIZE;
-    }
-
-    hashArray[hashIndex] = item;
-}
-
-struct DataItem* delete(struct DataItem* item, struct DataItem **hashArray) {
-    int key = item->key;
-
-    //get the hash
-    int hashIndex = hashCode(key);
-
-    //move in array until an empty
-    while(hashArray[hashIndex] != NULL) {
-
-        if(hashArray[hashIndex]->key == key) {
-            struct DataItem* temp = hashArray[hashIndex];
-
-            //assign a dummy item at deleted position
-            hashArray[hashIndex]->key = DELETED_KEY;
-            hashArray[hashIndex]->data = NULL;
-            return temp;
-        }
-
-        //go to next cell
-        ++hashIndex;
-
-        //wrap around the table
-        hashIndex %= SIZE;
-    }
-
-    return NULL;
-}
-
-void display(struct DataItem **hashArray) {
-    int i = 0;
-
-    for(i = 0; i<SIZE; i++) {
-
-        if(hashArray[i] != NULL)
-            printf(" (%d,%d)",hashArray[i]->key,hashArray[i]->data);
-        else
-            printf(" ~~ ");
-    }
-
-    printf("\n");
-}
 
 //region DICTIONARY FUNCTIONS
+/**
+ * Prints the contents of a dictionary.
+ * @param dictionary  Dictionary to be printed.
+ */
+void dictionary_print(struct dictionary dictionary) {
+    for (int i = 0; i < dictionary.length; i++) {
+        printf("Code: %d, Value: %s\n", i, dictionary.array[i]);
+    }
+}
+
 /**
  * Initializes a dictionary with an initial size and assigns codes and values to each entry.
  * 
@@ -156,27 +63,26 @@ bool dictionary_init(struct dictionary *dictionary) {
         return false;
     }
 
-    dictionary->capacity = INITIAL_DICTIONARY_SIZE;
-    (*dictionary).array = TRACKED_MALLOC(dictionary->capacity * sizeof(struct dictionaryentry));
+    dictionary->capacity = DIC_ARR_INC;
+    (*dictionary).array = TRACKED_MALLOC(dictionary->capacity * sizeof(dic_value_type));
     if (!(*dictionary).array) {
         LOG_MESSAGE(ERROR, "Memory allocation failed.");
         return false;
     }
     (*dictionary).length = 0;
 
-    for (size_t i = 0; i < dictionary->capacity; i++) {
-        (*dictionary).array[i].code = (dic_code_type) i;
+    for (size_t i = 0; i < INITIAL_DICTIONARY_SIZE; i++) {
 
         // Save i to char*
-        (*dictionary).array[i].value = TRACKED_MALLOC(2);
-        if (!(*dictionary).array[i].value) {
+        (*dictionary).array[i] = TRACKED_MALLOC(2);
+        if (!(*dictionary).array[i]) {
             LOG_MESSAGE(ERROR, "Memory allocation failed.");
             dictionary_free(dictionary);
             return false;
         }
 
         // Copy i to char*
-        int result = snprintf((char *) (*dictionary).array[i].value, 2, "%c", (char) i);
+        int result = snprintf((char *) (*dictionary).array[i], 2, "%c", (char) i);
         if (result < 0) {
             LOG_MESSAGE(ERROR, "Memory allocation failed.");
             dictionary_free(dictionary);
@@ -186,6 +92,16 @@ bool dictionary_init(struct dictionary *dictionary) {
         (dictionary->length)++;
 
         //because ascii is 0-255
+    }
+
+    for (int i = INITIAL_DICTIONARY_SIZE; i < dictionary->capacity; ++i) {
+        /*(*dictionary).array[i] = TRACKED_MALLOC(1);
+        if (!(*dictionary).array[i]) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            dictionary_free(dictionary);
+            return false;
+        }*/
+        (*dictionary).array[i] = NULL;
     }
 
     return true;
@@ -202,92 +118,14 @@ void dictionary_free(struct dictionary *dictionary) {
     }
 
     for (size_t i = 0; i < dictionary->length; i++) {
-        if (dictionary->array[i].value == NULL) {
+        if (dictionary->array[i] == NULL) {
             continue;
         }
-        TRACKED_FREE(dictionary->array[i].value);
+        TRACKED_FREE(dictionary->array[i]);
     }
 
 
     TRACKED_FREE(dictionary->array);
-}
-
-/**
- * Retrieves the dictionary code corresponding to a specified value.
- * 
- * @param dictionary Pointer to the dictionary.
- * @param value Value for which the code is requested.
- * @param ptr_return_value Pointer to store the retrieved code.
- * @return true if the operation is successful, false otherwise.
- */
-bool dictionary_get_code_to_value(struct dictionary dictionary, dic_value_type value, dic_code_type *ptr_return_value) {
-
-    //Check if data is not null
-    if (!dictionary.array || !value || !ptr_return_value) {
-        LOG_MESSAGE(ERROR, "Wrong argument");
-        return false;
-    }
-
-    size_t value_len = strlen((char *) value);
-    if (value_len == 1){
-        size_t index = (size_t) value;
-        if (index < dictionary.length) {
-            //estimate
-            dic_value_type current_value = dictionary.array[(size_t) value].value;
-            if (strcmp((char *) current_value, (char *) value) == 0) {
-                *ptr_return_value = dictionary.array[(size_t) value].code;
-                return true;
-            }
-        }
-    }
-
-    for (int i = 0; i < dictionary.length; i++) {
-        dic_value_type current_value = dictionary.array[i].value;
-        if (strcmp((char *) current_value, (char *) value) == 0) {
-            *ptr_return_value = dictionary.array[i].code;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/**
- * Checks if a specified value exists in the dictionary.
- * 
- * @param dictionary Pointer to the dictionary.
- * @param value Value to be checked.
- * @param ptr_return_value Pointer to a boolean variable to store the result.
- * @return true if the operation is successful, false otherwise.
- */
-bool dictionary_is_value_in_dictionary(struct dictionary dictionary, dic_value_type value, bool *ptr_return_value) {
-    //Check if data is not null
-    if (!dictionary.array || !value || !ptr_return_value) {
-        LOG_MESSAGE(ERROR, "Wrong argument");
-        return false;
-    }
-
-    size_t value_len = strlen((char *) value);
-    if (value_len == 1) {
-        *ptr_return_value = true;
-        return true;
-    }
-
-    for (int i = (int)dictionary.length - 1; i >= 0; i--) {
-        dic_value_type current_value = dictionary.array[i].value;
-
-        if(strlen((char *) current_value) != value_len) {
-            continue;
-        }
-
-        if (strcmp((char *) current_value, (char *) value) == 0) {
-            *ptr_return_value = true;
-            return true;
-        }
-    }
-    *ptr_return_value = false;
-
-    return true;
 }
 
 /**
@@ -305,12 +143,12 @@ dictionary_is_code_in_dictionary(struct dictionary dictionary, dic_code_type cod
         return false;
     }
 
-    for (int i = 0; i < dictionary.length; i++) {
-        if (dictionary.array[i].code == code) {
-            *ptr_return_is_in_dict = true;
-            return true;
-        }
+    if (code < dictionary.length) {
+        //estimate
+        *ptr_return_is_in_dict = true;
+        return true;
     }
+
     *ptr_return_is_in_dict = false;
     return true;
 }
@@ -333,19 +171,9 @@ dic_value_type dictionary_get_value_to_code(struct dictionary dictionary, dic_co
 
     if (code < dictionary.length) {
         //estimate
-        dic_code_type current_code = dictionary.array[code].code;
-        if (current_code == code) {
-            value = dictionary.array[code].value;
-            return value;
-        }
-    }
 
-    for (int i = 0; i < dictionary.length; i++) {
-        dic_code_type current_value = dictionary.array[i].code;
-        if (current_value == code) {
-            value = dictionary.array[i].value;
-            return value;
-        }
+        value = dictionary.array[code];
+        return value;
     }
 
     return value;
@@ -358,29 +186,30 @@ dic_value_type dictionary_get_value_to_code(struct dictionary dictionary, dic_co
  * @param entry struct dictionary entry to be added.
  * @return true if the addition is successful, false otherwise.
  */
-bool dictionary_add_entry(struct dictionary *dictionary, struct dictionaryentry entry) {
+bool dictionary_add_entry(struct dictionary *dictionary, dic_value_type entry) {
     //Check if data is not null
     if (!dictionary->array) {
         LOG_MESSAGE(ERROR, "Data is NULL.");
         return false;
     }
     //Check if value is not null
-    if (!entry.value) {
+    if (!entry) {
         LOG_MESSAGE(ERROR, "Value is NULL.");
         return false;
     }
 
     //if value doesnt fit
-    if (dictionary->length == dictionary->capacity) {
+    if (dictionary->length >= dictionary->capacity) {
+        printf("dictionary realloc\n");
         size_t new_capacity = dictionary->capacity + DIC_ARR_INC;
 
-        struct dictionaryentry *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(struct dictionaryentry));
+        dic_value_type *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(dic_value_type));
         if (temp_ptr == NULL) {
             LOG_MESSAGE(ERROR, "Memory allocation failed.");
             dictionary_free(dictionary);
             return false; // Memory allocation failed
         }
-        memcpy(temp_ptr, dictionary->array, dictionary->capacity * sizeof(struct dictionaryentry));
+        memcpy(temp_ptr, dictionary->array, dictionary->capacity * sizeof(dic_value_type));
         TRACKED_FREE(dictionary->array);
 
         dictionary->array = temp_ptr;
@@ -388,15 +217,16 @@ bool dictionary_add_entry(struct dictionary *dictionary, struct dictionaryentry 
         temp_ptr = NULL;
     }
 
-    dictionary->array[dictionary->length].code = entry.code;
+    size_t str_len = strlen((char *)entry);
 
-    dictionary->array[dictionary->length].value = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen((char *) entry.value)));
-    if (!dictionary->array[dictionary->length].value) {
+    dictionary->array[dictionary->length] = TRACKED_MALLOC(CALC_STR_MEM_SIZE(str_len));
+    if (!dictionary->array[dictionary->length]) {
         LOG_MESSAGE(ERROR, "Memory allocation failed.");
         dictionary_free(dictionary);
         return false;
     }
-    strcpy((char *) dictionary->array[dictionary->length].value, (char *) entry.value);
+    memcpy(dictionary->array[dictionary->length], entry, CALC_STR_MEM_SIZE(str_len));/*
+    strcpy((char *) dictionary->array[dictionary->length], (char *) entry);*/
 
     dictionary->length++;
 
@@ -404,6 +234,17 @@ bool dictionary_add_entry(struct dictionary *dictionary, struct dictionaryentry 
 }
 //endregion
 
+
+//region DICVALUEARRAY FUNCTIONS
+/**
+ * Checks if a given dictionary value is equal to the invalid value.
+ *
+ * @param value struct dictionary value to be checked.
+ * @return true if the value is invalid, false otherwise.
+ */
+bool is_value_invalid(dic_value_type value) {
+    return value == DIC_VALUE_INVALID;
+}
 
 /**
  * Adds an element to a dictionary value array using dynamic array functions.
@@ -420,7 +261,8 @@ bool dicvaluearray_add_element(struct dicvaluearray *dic_value_array, dic_value_
     }
 
     // If array is full, increase capacity
-    if (dic_value_array->length == dic_value_array->capacity) {
+    if (dic_value_array->length >= dic_value_array->capacity) {
+        printf("reaaloc\n");
         size_t new_capacity = dic_value_array->capacity + DIC_ARR_INC;
 
         dic_value_type *temp_ptr = realloc(dic_value_array->array, new_capacity * sizeof(dic_value_type));
@@ -437,13 +279,16 @@ bool dicvaluearray_add_element(struct dicvaluearray *dic_value_array, dic_value_
         temp_ptr = NULL;
     }
 
-    dic_value_array->array[dic_value_array->length] = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen((char *) element)));
+    size_t str_len = strlen((char *)element);
+    dic_value_array->array[dic_value_array->length] = TRACKED_MALLOC(CALC_STR_MEM_SIZE(str_len));
     if (!dic_value_array->array[dic_value_array->length]) {
         LOG_MESSAGE(ERROR, "Memory allocation failed.");
         dicvaluearray_free(dic_value_array);
         return false;
     }
-    strcpy((char *) dic_value_array->array[dic_value_array->length], (char *) element);
+    memcpy(dic_value_array->array[dic_value_array->length], element, CALC_STR_MEM_SIZE(str_len));/*
+
+    strcpy((char *) dic_value_array->array[dic_value_array->length], (char *) element);*/
 
 
     (dic_value_array->length)++;
@@ -543,7 +388,9 @@ bool dicvaluearray_copy(struct dicvaluearray original_array, struct dicvaluearra
 
     return true;
 }
+//endregion
 
+//region DICCODEARRAY FUNCTIONS
 /**
  * Adds an element to a static dictionary code array.
  * 
@@ -596,16 +443,217 @@ bool diccodearray_copy(struct staticdiccodearray original_array, struct staticdi
     memcpy(copy_array->array, original_array.array, copy_array->length * sizeof(dic_code_type));
     return true;
 }
+//endregion
+
+//region CHARARRAY FUNCTIONS
+/**
+ * Adds an element to a char array.
+ *
+ * @param char_array Pointer to the char array.
+ * @param element Element to be added.
+ * @return true if the addition is successful, false otherwise.
+ */
+bool chararray_add_element(struct chararray *char_array, char element) {
+    //Check if data is not null
+    if (!char_array || !char_array->array) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    //if value doesnt fit
+    if (char_array->length >= char_array->capacity) {
+        printf("realloc\n");
+        size_t new_capacity = char_array->capacity + CHARARRAY_INIT_SIZE;
+
+        void *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(char));
+        if (temp_ptr == NULL) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            TRACKED_FREE(char_array->array);
+
+            return false; // Memory allocation failed
+        }
+        TRACKED_FREE(char_array->array);
+        char_array->array = temp_ptr;
+        char_array->capacity = new_capacity;
+        temp_ptr = NULL;
+    }
+
+    char_array->array[char_array->length] = element;
+    (char_array->length)++;
+
+    return true;
+}
 
 /**
- * Checks if a given dictionary value is equal to the invalid value.
- * 
- * @param value struct dictionary value to be checked.
- * @return true if the value is invalid, false otherwise.
+ * Frees the memory occupied by a char array, including its internal array.
+ *
+ * @param char_array Pointer to the char array to be freed.
  */
-bool is_value_invalid(dic_value_type value) {
-    return value == DIC_VALUE_INVALID;
+void chararray_free(struct chararray *char_array) {
+    if (!char_array->array) {
+        return;
+    }
+
+    TRACKED_FREE(char_array->array);
 }
+
+/**
+ * This function adds a string to a struct chararray.
+ * @param char_array  The struct chararray to which the string is added.
+ * @param string  The string to be added.
+ * @return  true if the addition is successful, false otherwise.
+ */
+bool chararray_set_string(struct chararray *char_array, char *string) {
+    //Check if data is not null
+    if (!char_array || !string) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    size_t string_len = strlen(string);
+    size_t length = STR_ADD_ONE(string_len);
+    if (length > char_array->capacity) {
+        printf("realloc\n");
+        size_t new_capacity = length + CHARARRAY_INIT_SIZE;
+
+        void *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(char));
+        if (temp_ptr == NULL) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            TRACKED_FREE(char_array->array);
+
+            return false; // Memory allocation failed
+        }
+        TRACKED_FREE(char_array->array);
+        char_array->array = temp_ptr;
+        char_array->capacity = new_capacity;
+        temp_ptr = NULL;
+    }
+
+    memcpy(char_array->array, string, CALC_STR_MEM_SIZE(string_len));
+    char_array->length = STR_ADD_ONE(string_len);
+
+    return true;
+}
+
+/**
+ * This function adds a char after null terminator to a struct chararray.
+ * @param char_array  The struct chararray to which the char is added.
+ * @param c  The char to be added.
+ * @return  true if the addition is successful, false otherwise.
+ */
+bool chararray_add_char(struct chararray *char_array, char c){
+    //Check if data is not null
+    if (!char_array) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    size_t length = char_array->length + sizeof(char);
+    if (length > char_array->capacity) {
+        printf("realloc\n");
+        size_t new_capacity = length + CHARARRAY_INIT_SIZE;
+
+        void *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(char));
+        if (temp_ptr == NULL) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            TRACKED_FREE(char_array->array);
+
+            return false; // Memory allocation failed
+        }
+        TRACKED_FREE(char_array->array);
+        char_array->array = temp_ptr;
+        char_array->capacity = new_capacity;
+        temp_ptr = NULL;
+    }
+
+    char_array->array[char_array->length - 1] = c;
+    char_array->array[char_array->length] = STRING_NULL_TERMINATOR;
+    char_array->length = length;
+
+    return true;
+
+}
+
+/**
+ * This function adds a string and char to a struct chararray.
+ * @param char_array  The struct chararray to which the string is added.
+ * @param string  The string to be added.
+ * @param c  The char to be added.
+ * @return  true if the addition is successful, false otherwise.
+ */
+bool chararray_set_string_char(struct chararray *char_array, char *string, char c){
+    //Check if data is not null
+    if (!char_array || !string) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    size_t str_len = strlen(string);
+    size_t length = STR_ADD_ONE(str_len + sizeof(c));
+    if (length > char_array->capacity) {
+        printf("realloc\n");
+        size_t new_capacity = length + CHARARRAY_INIT_SIZE;
+
+        void *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(char));
+        if (temp_ptr == NULL) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            TRACKED_FREE(char_array->array);
+
+            return false; // Memory allocation failed
+        }
+        TRACKED_FREE(char_array->array);
+        char_array->array = temp_ptr;
+        char_array->capacity = new_capacity;
+        temp_ptr = NULL;
+    }
+
+    memcpy(char_array->array, string, str_len * sizeof(char));
+
+    char_array->length = str_len;
+
+    bool is_succes = chararray_add_element(char_array, c);
+    if (!is_succes) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        TRACKED_FREE(char_array->array);
+        return false;
+    }
+
+    is_succes = chararray_add_element(char_array, STRING_NULL_TERMINATOR);
+    if (!is_succes) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        TRACKED_FREE(char_array->array);
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Initializes the char array by allocating memory for its internal structures.
+ *
+ * @param char_array Pointer to the char array to be initialized.
+ * @return true if initialization is successful, false otherwise.
+ */
+bool chararray_init(struct chararray *char_array) {
+    //Check if data is not null
+    if (!char_array) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    char_array->length = 0;
+    char_array->capacity = CHARARRAY_INIT_SIZE;
+    char_array->array = TRACKED_MALLOC(sizeof(char) * char_array->capacity);
+    if (!char_array->array) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        return false;
+    }
+
+    chararray_add_element(char_array, STRING_NULL_TERMINATOR);
+
+    return true;
+}
+//endregion
 
 //endregion
 

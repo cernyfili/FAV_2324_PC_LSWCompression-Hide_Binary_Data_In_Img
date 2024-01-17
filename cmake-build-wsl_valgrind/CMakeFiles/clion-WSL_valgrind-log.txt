@@ -1,0 +1,2 @@
+Cannot generate 'WSL_valgrind' into G:\Můj disk\0_MAIN\škola\FAV\3.rocnik_23_24\_FAV_ZS_23_24\PC\semestralka\FAV_PC_SP_23_24_BinaryDataInImg\cmake-build-wsl_valgrind
+CMakeCache.txt is found in the project dir, only in-source generation will be performed.

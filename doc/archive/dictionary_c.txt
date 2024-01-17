@@ -1,0 +1,709 @@
+//
+// Author: Filip Cerny
+// Date: 01.01.2024
+// Description: This file contains dictionary functions.
+//
+
+//Local includes
+#include "dictionary.h"
+#include "utils.h"
+
+
+//Lib includes
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+//region DEFINE, MACROS
+/**
+ * Represents the initial size of the dictionary.
+ */
+#define INITIAL_DICTIONARY_SIZE 256
+/**
+ * Represents the increment of the dictionary size.
+ */
+#define DIC_ARR_INC 50000
+
+/**
+ * Represents the invalid value of the dictionary.
+ */
+#define DIC_VALUE_INVALID NULL
+//endregion
+
+//region FUNCTIONS DEFINITIONS
+
+//region PUBLIC FUNCTIONS
+#define SIZE 1000
+
+/*struct DataItem* hashArray[SIZE];*/
+/*struct DataItem* dummyItem;
+struct DataItem* item;*/
+
+int hashCode(dic_code_type key) {
+    return key % SIZE;
+}
+
+struct dictionaryentry *search(dic_code_type key, struct dictionaryentry **hashArray) {
+    //get the hash
+    int hashIndex = hashCode(key);
+
+    //move in array until an empty
+    while(hashArray[hashIndex] != NULL) {
+
+        if(hashArray[hashIndex]->code == key)
+            return hashArray[hashIndex];
+
+        //go to next cell
+        ++hashIndex;
+
+        //wrap around the table
+        hashIndex %= SIZE;
+    }
+
+    return NULL;
+}
+
+void init(struct dictionaryentry **hashArray, size_t size) {
+    hashArray[size];
+    for (int i = 0; i < size; i++) {
+        hashArray[i] = NULL;
+    }
+}
+void insert(dic_code_type key,unsigned char * data, struct dictionaryentry **hashArray, size_t* size, size_t* length);
+
+void simple_insert(dic_code_type key,unsigned char * data, struct dictionaryentry **hashArray) {
+
+    struct dictionaryentry *item = TRACKED_MALLOC(sizeof(struct dictionaryentry));
+    if (item == NULL) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        return;
+    }
+    item->value = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen((char *) data)));
+    if (item->value == NULL) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        TRACKED_FREE(item);
+        return;
+    }
+    strcpy((char *) item->value, (char *) data);
+
+    item->code = key;
+
+    //get the hash
+    int hashIndex = hashCode(key);
+
+    //move in array until an empty or deleted cell
+    while(hashArray[hashIndex] != NULL && hashArray[hashIndex]->code != DELETED_KEY) {
+        //go to next cell
+        ++hashIndex;
+
+        //wrap around the table
+        hashIndex %= SIZE;
+    }
+
+    hashArray[hashIndex] = item;
+}
+
+void rehash(struct dictionaryentry **hashArray, size_t new_size, size_t* old_size, size_t* length) {
+
+    struct dictionaryentry* new_map;
+    init(&new_map, new_size); // Inicializace nové hashmapy s novou velikostí
+
+    // Přehození všech existujících položek do nové hashmapy
+    for (size_t i = 0; i < *old_size; i++) {
+        struct dictionaryentry current_entry = (*hashArray)[i];
+        simple_insert(current_entry.code, current_entry.value, &new_map);
+    }
+
+    *hashArray = new_map;
+}
+
+void insert(dic_code_type key,unsigned char * data, struct dictionaryentry **hashArray, size_t* size, size_t* length) {
+
+    if (*size == *length) {
+        size_t new_size = *size * 2;
+        rehash(hashArray, new_size , size, length);
+        *size = new_size;
+    }
+    struct dictionaryentry *item = TRACKED_MALLOC(sizeof(struct dictionaryentry));
+    if (item == NULL) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        return;
+    }
+    item->value = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen((char *) data)));
+    if (item->value == NULL) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        TRACKED_FREE(item);
+        return;
+    }
+    strcpy((char *) item->value, (char *) data);
+
+    item->code = key;
+
+    //get the hash
+    int hashIndex = hashCode(key);
+
+    hashArray[hashIndex] = item;
+    (*length)++;
+}
+
+
+
+struct dictionaryentry* delete(struct dictionaryentry* item, struct dictionaryentry **hashArray) {
+    int key = item->code;
+
+    //get the hash
+    int hashIndex = hashCode(key);
+
+    //move in array until an empty
+    while(hashArray[hashIndex] != NULL) {
+
+        if(hashArray[hashIndex]->code == key) {
+            struct dictionaryentry* temp = hashArray[hashIndex];
+
+            //assign a dummy item at deleted position
+            hashArray[hashIndex]->code = DELETED_KEY;
+            hashArray[hashIndex]->value = NULL;
+            return temp;
+        }
+
+        //go to next cell
+        ++hashIndex;
+
+        //wrap around the table
+        hashIndex %= SIZE;
+    }
+
+    return NULL;
+}
+
+void display(struct dictionaryentry **hashArray) {
+    int i = 0;
+
+    for(i = 0; i<SIZE; i++) {
+
+        if(hashArray[i] != NULL)
+            printf(" (%d,%s)",hashArray[i]->code,hashArray[i]->value);
+        else
+            printf(" ~~ ");
+    }
+
+    printf("\n");
+}
+
+//region DICTIONARY FUNCTIONS
+/**
+ * Initializes a dictionary with an initial size and assigns codes and values to each entry.
+ * 
+ * @param dictionary Pointer to the dictionary to be initialized.
+ * @return true if the initialization is successful, false otherwise.
+ */
+bool dictionary_init(struct dictionary *dictionary) {
+    if (!dictionary) {
+        LOG_MESSAGE(ERROR, "struct dictionary pointer is NULL.");
+        return false;
+    }
+    init(&dictionary->array, INITIAL_DICTIONARY_SIZE);
+
+    for (size_t i = 0; i < INITIAL_DICTIONARY_SIZE; i++) {
+
+        dic_code_type code = (dic_code_type) i;
+
+        // Save i to char*
+        unsigned char * value = TRACKED_MALLOC(2);
+        if (!value) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            dictionary_free(dictionary);
+            return false;
+        }
+
+        // Copy i to char*
+        int result = snprintf((char *) value, 2, "%c", (char) i);
+        if (result < 0) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            dictionary_free(dictionary);
+            return false;
+        }
+
+        insert(code, value, &dictionary->array, &dictionary->size, &dictionary->length);
+
+
+
+        //because ascii is 0-255
+    }
+
+    /*dictionary->capacity = INITIAL_DICTIONARY_SIZE;
+    (*dictionary).array = TRACKED_MALLOC(dictionary->capacity * sizeof(struct dictionaryentry));
+    if (!(*dictionary).array) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        return false;
+    }
+    (*dictionary).length = 0;
+
+    for (size_t i = 0; i < dictionary->capacity; i++) {
+        (*dictionary).array[i].code = (dic_code_type) i;
+
+        // Save i to char*
+        (*dictionary).array[i].value = TRACKED_MALLOC(2);
+        if (!(*dictionary).array[i].value) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            dictionary_free(dictionary);
+            return false;
+        }
+
+        // Copy i to char*
+        int result = snprintf((char *) (*dictionary).array[i].value, 2, "%c", (char) i);
+        if (result < 0) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            dictionary_free(dictionary);
+            return false;
+        }
+
+        (dictionary->length)++;
+
+        //because ascii is 0-255
+    }*/
+
+    return true;
+}
+
+/**
+ * Frees the memory occupied by a dictionary, including its internal array of entries.
+ * 
+ * @param dictionary Pointer to the dictionary to be freed.
+ */
+void dictionary_free(struct dictionary *dictionary) {
+    if (dictionary->array == NULL) {
+        return;
+    }
+
+    for (size_t i = 0; i < dictionary->length; i++) {
+        if (dictionary->array[i].value == NULL) {
+            continue;
+        }
+        TRACKED_FREE(dictionary->array[i].value);
+    }
+
+
+    TRACKED_FREE(dictionary->array);
+}
+
+/**
+ * Retrieves the dictionary code corresponding to a specified value.
+ * 
+ * @param dictionary Pointer to the dictionary.
+ * @param value Value for which the code is requested.
+ * @param ptr_return_value Pointer to store the retrieved code.
+ * @return true if the operation is successful, false otherwise.
+ */
+bool dictionary_get_code_to_value(struct dictionary dictionary, dic_value_type value, dic_code_type *ptr_return_value) {
+
+    //Check if data is not null
+    if (!dictionary.array || !value || !ptr_return_value) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    size_t value_len = strlen((char *) value);
+    if (value_len == 1){
+        size_t index = (size_t) value;
+        if (index < dictionary.length) {
+            //estimate
+            dic_value_type current_value = dictionary.array[(size_t) value].value;
+            if (strcmp((char *) current_value, (char *) value) == 0) {
+                *ptr_return_value = dictionary.array[(size_t) value].code;
+                return true;
+            }
+        }
+    }
+
+    for (int i = 0; i < dictionary.length; i++) {
+        dic_value_type current_value = dictionary.array[i].value;
+        if (strcmp((char *) current_value, (char *) value) == 0) {
+            *ptr_return_value = dictionary.array[i].code;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Checks if a specified value exists in the dictionary.
+ * 
+ * @param dictionary Pointer to the dictionary.
+ * @param value Value to be checked.
+ * @param ptr_return_value Pointer to a boolean variable to store the result.
+ * @return true if the operation is successful, false otherwise.
+ */
+bool dictionary_is_value_in_dictionary(struct dictionary dictionary, dic_value_type value, bool *ptr_return_value) {
+    //Check if data is not null
+    if (!dictionary.array || !value || !ptr_return_value) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    size_t value_len = strlen((char *) value);
+    if (value_len == 1) {
+        *ptr_return_value = true;
+        return true;
+    }
+
+    for (int i = (int)dictionary.length - 1; i >= 0; i--) {
+        struct dictionaryentry* current_entry = &dictionary.array[i];
+        if (!current_entry) {
+            continue;
+        }
+
+        dic_value_type current_value = dictionary.array[i].value;
+
+        if(strlen((char *) current_value) != value_len) {
+            continue;
+        }
+
+        if (strcmp((char *) current_value, (char *) value) == 0) {
+            *ptr_return_value = true;
+            return true;
+        }
+    }
+    *ptr_return_value = false;
+
+    return true;
+}
+
+/**
+ * Checks if a specified code exists in the dictionary.
+ * 
+ * @param dictionary struct dictionary to be searched.
+ * @param code Code to be checked.
+ * @param ptr_return_is_in_dict Pointer to a boolean variable to store the result.
+ * @return true if the operation is successful, false otherwise.
+ */
+bool
+dictionary_is_code_in_dictionary(struct dictionary dictionary, dic_code_type code, bool *ptr_return_is_in_dict) {
+    if (!dictionary.array || !ptr_return_is_in_dict) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    struct dictionaryentry* searched_entry = search(code, &dictionary.array);
+    if (searched_entry != NULL) {
+        *ptr_return_is_in_dict = true;
+        return true;
+    }
+
+    /*
+
+    for (int i = 0; i < dictionary.length; i++) {
+        if (dictionary.array[i].code == code) {
+            *ptr_return_is_in_dict = true;
+            return true;
+        }
+    }*/
+    *ptr_return_is_in_dict = false;
+    return true;
+}
+
+/**
+ * Retrieves the dictionary value corresponding to a specified code.
+ * 
+ * @param dictionary Pointer to the dictionary.
+ * @param code Code for which the value is requested.
+ * @return struct dictionary value corresponding to the code.
+ */
+dic_value_type dictionary_get_value_to_code(struct dictionary dictionary, dic_code_type code) {
+    dic_value_type value = DIC_VALUE_INVALID;
+
+    //Check if data is not null
+    if (!dictionary.array) {
+        LOG_MESSAGE(ERROR, "Data is NULL.");
+        return value;
+    }
+
+    struct dictionaryentry* searched_entry = search(code, &dictionary.array);
+    if (searched_entry != NULL) {
+        value = searched_entry->value;
+        return value;
+    }
+/*
+    if (code < dictionary.length) {
+        //estimate
+        dic_code_type current_code = dictionary.array[code].code;
+        if (current_code == code) {
+            value = dictionary.array[code].value;
+            return value;
+        }
+    }
+
+    for (int i = 0; i < dictionary.length; i++) {
+        dic_code_type current_value = dictionary.array[i].code;
+        if (current_value == code) {
+            value = dictionary.array[i].value;
+            return value;
+        }
+    }*/
+
+    return value;
+}
+
+/**
+ * Adds a dictionary entry to the dictionary using dynamic array functions.
+ * 
+ * @param dictionary Pointer to the dictionary.
+ * @param entry struct dictionary entry to be added.
+ * @return true if the addition is successful, false otherwise.
+ */
+bool dictionary_add_entry(struct dictionary *dictionary, struct dictionaryentry entry) {
+    //Check if data is not null
+    if (!dictionary->array) {
+        LOG_MESSAGE(ERROR, "Data is NULL.");
+        return false;
+    }
+    //Check if value is not null
+    if (!entry.value) {
+        LOG_MESSAGE(ERROR, "Value is NULL.");
+        return false;
+    }
+
+    insert(entry.code, entry.value, &dictionary->array, &dictionary->size, &dictionary->length);
+/*
+    //if value doesnt fit
+    if (dictionary->length == dictionary->capacity) {
+        size_t new_capacity = dictionary->capacity + DIC_ARR_INC;
+
+        struct dictionaryentry *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(struct dictionaryentry));
+        if (temp_ptr == NULL) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            dictionary_free(dictionary);
+            return false; // Memory allocation failed
+        }
+        memcpy(temp_ptr, dictionary->array, dictionary->capacity * sizeof(struct dictionaryentry));
+        TRACKED_FREE(dictionary->array);
+
+        dictionary->array = temp_ptr;
+        dictionary->capacity = new_capacity;
+        temp_ptr = NULL;
+    }
+
+    dictionary->array[dictionary->length].code = entry.code;
+
+    dictionary->array[dictionary->length].value = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen((char *) entry.value)));
+    if (!dictionary->array[dictionary->length].value) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        dictionary_free(dictionary);
+        return false;
+    }
+    strcpy((char *) dictionary->array[dictionary->length].value, (char *) entry.value);
+
+    dictionary->length++;*/
+
+    return true;
+}
+//endregion
+
+
+/**
+ * Adds an element to a dictionary value array using dynamic array functions.
+ * 
+ * @param dic_value_array Pointer to the dictionary value array.
+ * @param element Element to be added.
+ * @return true if the addition is successful, false otherwise.
+ */
+bool dicvaluearray_add_element(struct dicvaluearray *dic_value_array, dic_value_type element) {
+    //Check if data is not null
+    if (!dic_value_array->array || !element) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    // If array is full, increase capacity
+    if (dic_value_array->length == dic_value_array->capacity) {
+        size_t new_capacity = dic_value_array->capacity + DIC_ARR_INC;
+
+        dic_value_type *temp_ptr = realloc(dic_value_array->array, new_capacity * sizeof(dic_value_type));
+        if (temp_ptr == NULL) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            TRACKED_FREE(temp_ptr);
+            dicvaluearray_free(dic_value_array);
+
+            return false; // Memory allocation failed
+        }
+
+        dic_value_array->array = temp_ptr;
+        dic_value_array->capacity = new_capacity;
+        temp_ptr = NULL;
+    }
+
+    dic_value_array->array[dic_value_array->length] = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen((char *) element)));
+    if (!dic_value_array->array[dic_value_array->length]) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        dicvaluearray_free(dic_value_array);
+        return false;
+    }
+    strcpy((char *) dic_value_array->array[dic_value_array->length], (char *) element);
+
+
+    (dic_value_array->length)++;
+    return true;
+}
+
+/**
+ * Frees the memory occupied by a dictionary value array, including its internal array.
+ * 
+ * @param dic_value_array Pointer to the dictionary value array to be freed.
+ */
+void dicvaluearray_free(struct dicvaluearray *dic_value_array) {
+    if (!dic_value_array->array) {
+        return;
+    }
+
+    for (size_t i = 0; i < dic_value_array->length; i++) {
+        TRACKED_FREE(dic_value_array->array[i]);
+    }
+
+    TRACKED_FREE(dic_value_array->array);
+}
+
+
+/**
+ * This function takes a struct dicvaluearray and converts it into a single string,
+ * allocating memory for the resulting string and updating the pointer accordingly.
+ *
+ * @param array The struct dicvaluearray to be converted to a string.
+ * @param ptr_return_str Pointer to the char pointer to store the resulting string.
+ * @return true if conversion is successful, false otherwise.
+ */
+bool dicvaluearray_to_string(struct dicvaluearray array, char **ptr_return_str) {
+    //Check if data is not null
+    if (!array.array || !ptr_return_str) {
+        LOG_MESSAGE(ERROR, "Arguments not valid.");
+        return false;
+    }
+
+    size_t final_str_len = 0;
+    for (int i = 0; i < array.length; i++) {
+        final_str_len += strlen((char *) array.array[i]);
+    }
+
+    *ptr_return_str = TRACKED_MALLOC(CALC_STR_MEM_SIZE(final_str_len));
+    if (!*ptr_return_str) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        return false;
+    }
+    strcpy(*ptr_return_str, (char *) array.array[0]);
+    for (int i = 1; i < array.length; i++) {
+        strcat(*ptr_return_str, (char *) array.array[i]);
+    }
+
+    return true;
+}
+
+/**
+ * This function takes a struct dicvaluearray and copies it to a new struct dicvaluearray,
+ * allocating memory for the resulting array and updating the pointer accordingly.
+ *
+ * @param original_array The struct dicvaluearray to be copied.
+ * @param ptr_return_copy_array Pointer to the struct dicvaluearray to store the copied array.
+ * @return true if copy is successful, false otherwise.
+ */
+bool dicvaluearray_copy(struct dicvaluearray original_array, struct dicvaluearray *ptr_return_copy_array) {
+    //Check if data is not null
+    if (!original_array.array || !ptr_return_copy_array) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    //Prepare ptr_return
+    ptr_return_copy_array->length = 0;
+    ptr_return_copy_array->capacity = 0;
+    ptr_return_copy_array->array = NULL;
+
+    (ptr_return_copy_array)->capacity = (original_array).length;
+    (ptr_return_copy_array)->array = TRACKED_MALLOC((ptr_return_copy_array)->capacity * sizeof(dic_value_type));
+    if (!(ptr_return_copy_array)->array) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        return false;
+    }
+    (ptr_return_copy_array)->length = (ptr_return_copy_array)->capacity;
+
+    //Copy contents of ( original_array) to ( copy_array)
+    for (int i = 0; i < (ptr_return_copy_array)->length; i++) {
+        dic_value_type value = (original_array).array[i];
+        (ptr_return_copy_array)->array[i] = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen((char *) value)));
+        if (!(ptr_return_copy_array)->array[i]) {
+            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            dicvaluearray_free(ptr_return_copy_array);
+            return false;
+        }
+        memcpy((ptr_return_copy_array)->array[i], value, CALC_STR_MEM_SIZE(strlen((char *) value)));
+    }
+
+    return true;
+}
+
+/**
+ * Adds an element to a static dictionary code array.
+ * 
+ * @param dic_value_array Pointer to the static dictionary code array.
+ * @param element Element to be added.
+ * @return true if the addition is successful, false otherwise.
+ */
+bool diccodearray_add_element(struct staticdiccodearray *dic_value_array, dic_code_type element) {
+    //Check if data is not null
+    if (!dic_value_array->array) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    // If array is full, increase capacity
+    if (dic_value_array->length == dic_value_array->capacity) {
+        LOG_MESSAGE(ERROR, "Array is full");
+        return false;
+    }
+
+    dic_value_array->array[dic_value_array->length++] = element;
+
+    return true;
+}
+
+
+/**
+ * This function copies struct staticdiccodearray to another struct staticdiccodearray
+ * @param original_array is the original array
+ * @param copy_array is the array to be copied tos
+ * @return  true if copy is successful, false otherwise.
+ */
+bool diccodearray_copy(struct staticdiccodearray original_array, struct staticdiccodearray *copy_array) {
+    //Check if data is not null
+    if (!original_array.array || !copy_array) {
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+
+    copy_array->capacity = original_array.length;
+    copy_array->array = TRACKED_MALLOC(copy_array->capacity * sizeof(dic_code_type));
+    if (copy_array->array == NULL) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        return false;
+    }
+
+
+    // Copy the compressed data from original_array to compressed_data
+    copy_array->length = copy_array->capacity;
+    memcpy(copy_array->array, original_array.array, copy_array->length * sizeof(dic_code_type));
+    return true;
+}
+
+/**
+ * Checks if a given dictionary value is equal to the invalid value.
+ * 
+ * @param value struct dictionary value to be checked.
+ * @return true if the value is invalid, false otherwise.
+ */
+bool is_value_invalid(dic_value_type value) {
+    return value == DIC_VALUE_INVALID;
+}
+
+//endregion
+
+//endregion
