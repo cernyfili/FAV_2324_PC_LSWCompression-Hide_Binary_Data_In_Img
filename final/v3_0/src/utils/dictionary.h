@@ -20,7 +20,7 @@
 //region STRUCTS
 #define DELETED_KEY -1
 
-#define MAX_CODE_LENGTH 65536
+#define MAX_VALUE_LENGTH 65536
 
 /**
  * Represents the type of the dictionary value.

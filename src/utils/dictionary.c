@@ -200,7 +200,7 @@ bool dictionary_add_entry(struct dictionary *dictionary, dic_value_type entry) {
 
     //if value doesnt fit
     if (dictionary->length >= dictionary->capacity) {
-        printf("dictionary realloc\n");
+        /*printf("dictionary realloc\n");*/
         size_t new_capacity = dictionary->capacity + DIC_ARR_INC;
 
         dic_value_type *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(dic_value_type));
@@ -280,13 +280,13 @@ bool dicvaluearray_add_element(struct dicvaluearray *dic_value_array, dic_value_
     }
 
     size_t str_len = strlen((char *)element);
-    dic_value_array->array[dic_value_array->length] = TRACKED_MALLOC(CALC_STR_MEM_SIZE(str_len));
+    dic_value_array->array[dic_value_array->length] = TRACKED_MALLOC(str_len * sizeof(char));
     if (!dic_value_array->array[dic_value_array->length]) {
         LOG_MESSAGE(ERROR, "Memory allocation failed.");
         dicvaluearray_free(dic_value_array);
         return false;
     }
-    memcpy(dic_value_array->array[dic_value_array->length], element, CALC_STR_MEM_SIZE(str_len));/*
+    memcpy(dic_value_array->array[dic_value_array->length], element, str_len & sizeof(char));/*
 
     strcpy((char *) dic_value_array->array[dic_value_array->length], (char *) element);*/
 

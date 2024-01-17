@@ -23,7 +23,7 @@
 /**
  * Represents the increment of the dictionary size.
  */
-#define DIC_ARR_INC 10000
+#define DIC_ARR_INC 50000
 
 /**
  * Represents the invalid value of the dictionary.
@@ -200,7 +200,7 @@ bool dictionary_add_entry(struct dictionary *dictionary, dic_value_type entry) {
 
     //if value doesnt fit
     if (dictionary->length >= dictionary->capacity) {
-        printf("dictionary realloc\n");
+        /*printf("dictionary realloc\n");*/
         size_t new_capacity = dictionary->capacity + DIC_ARR_INC;
 
         dic_value_type *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(dic_value_type));

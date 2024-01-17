@@ -333,6 +333,7 @@ int extract_payload_from_data(struct binarydataarray hidden_data, char **ptr_ret
         cleanup_run_commands(&cleanup_list);
         return 5;
     }
+    printf("Payload.c after decompress\n");
 
     cleanup_run_commands(&cleanup_list);
 

@@ -319,6 +319,7 @@ static int extract_payload(const char *input_image_filepath, const char *output_
         return result;
     }
     CLEANUP_ADD_COMMAND(&cleanup_list, payload_data);
+    printf("main.c after extract_payload_from_data\n");
 
 
     //save payload to file

@@ -365,11 +365,11 @@ lzw_decompress(const struct staticdiccodearray compressed_data, struct dicvaluea
 
     //init memory for result_data
     size_t result_capacity_estimate = (size_t) ((double) compressed_data.length / LZW_COMPRESSION_RATE);
-    struct dicvaluearray result_data;
-    result_data.capacity = result_capacity_estimate;
-    result_data.length = 0;
-    result_data.array = TRACKED_MALLOC(result_data.capacity * sizeof(dic_value_type));
-    if (!result_data.array) {
+
+    (*ptr_return_decompressed_data).capacity = result_capacity_estimate;
+    (*ptr_return_decompressed_data).length = 0;
+    (*ptr_return_decompressed_data).array = TRACKED_MALLOC((*ptr_return_decompressed_data).capacity * sizeof(dic_value_type));
+    if (!(*ptr_return_decompressed_data).array) {
         LOG_MESSAGE(ERROR, "Memory allocation failed.");
         return false;
     }
@@ -380,7 +380,7 @@ lzw_decompress(const struct staticdiccodearray compressed_data, struct dicvaluea
     if (!is_success) {
         LOG_MESSAGE(ERROR, "Memory allocation failed.");
         dictionary_free(&dictionary);
-        dicvaluearray_free(&result_data);
+        dicvaluearray_free(ptr_return_decompressed_data);
         return false;
     }
     //endregion
@@ -394,32 +394,29 @@ lzw_decompress(const struct staticdiccodearray compressed_data, struct dicvaluea
     if (is_value_invalid(old_value)) {
         LOG_MESSAGE(ERROR, "Code not found in dictionary.");
         dictionary_free(&dictionary);
-        dicvaluearray_free(&result_data);
+        dicvaluearray_free(ptr_return_decompressed_data);
         return false;
     }
-    is_success = dicvaluearray_add_element(&result_data, old_value);
+    is_success = dicvaluearray_add_element(ptr_return_decompressed_data, old_value);
     if (!is_success) {
         LOG_MESSAGE(ERROR, "Memory allocation failed.");
         dictionary_free(&dictionary);
-        dicvaluearray_free(&result_data);
+        dicvaluearray_free(ptr_return_decompressed_data);
         return false;
     }
     //endregion
 
     char c_value = STRING_NULL_TERMINATOR;
-    struct chararray s_value;
-    is_success = chararray_init(&s_value);
-    if (!is_success) {
-        LOG_MESSAGE(ERROR, "Memory allocation failed.");
-        dictionary_free(&dictionary);
-        dicvaluearray_free(&result_data);
-        return false;
-    }
+
+    size_t s_value_len = 0;
+    //max length set becouse of speed (should be dynamic becouse we don't know final size of word)
+    size_t s_value_capacity = MAX_VALUE_LENGTH;
+    char s_value[MAX_VALUE_LENGTH];
 
     //region LZW WHILE not end of input stream
     for (size_t i = 1; i < compressed_data.length; i++) {
         /*LOG_MESSAGE(INFO, "lzw_decompress: Processing character %zu from %zu", i, compressed_data.length);*/
-        printf("%zu from %zu\n", i, compressed_data.length);
+        /*printf("%zu from %zu\n", i, compressed_data.length);*/
 
         dic_code_type new_code;
 
@@ -428,10 +425,10 @@ lzw_decompress(const struct staticdiccodearray compressed_data, struct dicvaluea
         if (is_value_invalid(old_value)) {
             LOG_MESSAGE(ERROR, "Code not found in dictionary.");
             dictionary_free(&dictionary);
-            dicvaluearray_free(&result_data);
-            chararray_free(&s_value);
+            dicvaluearray_free(ptr_return_decompressed_data);
             return false;
         }
+        size_t old_value_len = strlen((char *) old_value);
 
         //region LZW NEW = next input code
         new_code = compressed_data.array[i];
@@ -443,33 +440,34 @@ lzw_decompress(const struct staticdiccodearray compressed_data, struct dicvaluea
         if (!is_success) {
             LOG_MESSAGE(ERROR, "Code not found in dictionary.");
             dictionary_free(&dictionary);
-            dicvaluearray_free(&result_data);
-            chararray_free(&s_value);
+            dicvaluearray_free(ptr_return_decompressed_data);
             return false;
         }
 
         if (!is_in_dictionary) {
             //region LZW S = translation of OLD
-            is_success = chararray_set_string(&s_value, (char *) old_value);
-            if (!is_success) {
-                LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            size_t length = STR_ADD_ONE(old_value_len);
+            if (length >= s_value_capacity) {
+                LOG_MESSAGE(ERROR, "Value is too long.");
                 dictionary_free(&dictionary);
-                dicvaluearray_free(&result_data);
-                chararray_free(&s_value);
+                dicvaluearray_free(ptr_return_decompressed_data);
                 return false;
             }
+            memcpy(s_value, old_value, length * sizeof(char));
+            s_value_len = length;
             //endregion
 
             //region LZW S = S + C
             if (c_value != STRING_NULL_TERMINATOR) {//is not last iteration
-                is_success = chararray_add_char(&s_value, c_value);
-                if (!is_success) {
-                    LOG_MESSAGE(ERROR, "Memory allocation failed.");
+                s_value[s_value_len - 1] = c_value;
+                if (s_value_len >= s_value_capacity) {
+                    LOG_MESSAGE(ERROR, "Value is too long.");
                     dictionary_free(&dictionary);
-                    dicvaluearray_free(&result_data);
-                    chararray_free(&s_value);
+                    dicvaluearray_free(ptr_return_decompressed_data);
                     return false;
                 }
+                s_value[s_value_len] = STRING_NULL_TERMINATOR;
+                s_value_len++;
             }
 
             //endregion
@@ -479,92 +477,84 @@ lzw_decompress(const struct staticdiccodearray compressed_data, struct dicvaluea
             if (is_value_invalid(new_value)) {
                 LOG_MESSAGE(ERROR, "Code not found in dictionary.");
                 dictionary_free(&dictionary);
-                dicvaluearray_free(&result_data);
-                chararray_free(&s_value);
+                dicvaluearray_free(ptr_return_decompressed_data);
                 return false;
             }
-
-            //s_value = new_value
-            is_success = chararray_set_string(&s_value, (char *) new_value);
-            if (!is_success) {
-                LOG_MESSAGE(ERROR, "Memory allocation failed.");
+            size_t new_value_len = strlen((char *) new_value);
+            size_t length = STR_ADD_ONE(new_value_len);
+            if (length >= s_value_capacity) {
+                LOG_MESSAGE(ERROR, "Value is too long.");
                 dictionary_free(&dictionary);
-                dicvaluearray_free(&result_data);
-                chararray_free(&s_value);
+                dicvaluearray_free(ptr_return_decompressed_data);
                 return false;
             }
+            memcpy(s_value, new_value, length * sizeof(char));
+            s_value_len = length;
+
             //endregion
         }
 
         //region LZW save to result S
-        is_success = dicvaluearray_add_element(&result_data, (dic_value_type) s_value.array);
+        is_success = dicvaluearray_add_element(ptr_return_decompressed_data, (dic_value_type) s_value);
         if (!is_success) {
             LOG_MESSAGE(ERROR, "Memory allocation failed.");
             dictionary_free(&dictionary);
-            dicvaluearray_free(&result_data);
-            chararray_free(&s_value);
+            dicvaluearray_free(ptr_return_decompressed_data);
             return false;
         }
         //endregion
 
         //region LZW C = first character of S
-        c_value = s_value.array[0];
+        c_value = s_value[0];
         //endregion
 
         //region LZW OLD_value + C to the string table
-        struct chararray combined_value;
-        is_success = chararray_init(&combined_value);
-        if (!is_success) {
-            LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        char combined_value[MAX_VALUE_LENGTH];
+        size_t combined_value_len = 0;
+        size_t combined_value_capacity = MAX_VALUE_LENGTH;
+        size_t length = STR_ADD_ONE(old_value_len + sizeof(char));
+        if (length >= combined_value_capacity) {
+            LOG_MESSAGE(ERROR, "Value is too long.");
             dictionary_free(&dictionary);
-            dicvaluearray_free(&result_data);
-            chararray_free(&s_value);
+            dicvaluearray_free(ptr_return_decompressed_data);
             return false;
         }
-        is_success = chararray_set_string_char(&combined_value, (char *) old_value, c_value);
-        if (!is_success) {
-            LOG_MESSAGE(ERROR, "Memory allocation failed.");
-            dictionary_free(&dictionary);
-            dicvaluearray_free(&result_data);
-            chararray_free(&s_value);
-            chararray_free(&combined_value);
-            return false;
-        }
+        memcpy(combined_value, old_value, old_value_len * sizeof(char));
+        combined_value_len = old_value_len;
+        combined_value[combined_value_len] = c_value;
+        combined_value_len++;
+        combined_value[combined_value_len] = STRING_NULL_TERMINATOR;
+
 
         //save to dictionary
-        dic_value_type entry = (dic_value_type)combined_value.array;
+        dic_value_type entry = (dic_value_type)combined_value;
         is_success = dictionary_add_entry(&dictionary, entry);
         if (!is_success) {
             LOG_MESSAGE(ERROR, "Memory allocation failed.");
             dictionary_free(&dictionary);
-            dicvaluearray_free(&result_data);
-            chararray_free(&s_value);
-            chararray_free(&combined_value);
+            dicvaluearray_free(ptr_return_decompressed_data);
             return false;
         }
-        chararray_free(&combined_value);
         //endregion
 
         //region LZW OLD = NEW
         old_code = new_code;
         //endregion
     }
+    printf("compression.c after compression");
     //endregion
 
     //Copy result_data to ptr_return_decompressed_data
-    is_success = dicvaluearray_copy(result_data, ptr_return_decompressed_data);
+    /*is_success = dicvaluearray_copy(result_data, ptr_return_decompressed_data);
     if (!is_success) {
         LOG_MESSAGE(ERROR, "Memory allocation failed.");
         dicvaluearray_free(ptr_return_decompressed_data);
         dictionary_free(&dictionary);
-        dicvaluearray_free(&result_data);
-        chararray_free(&s_value);
+        dicvaluearray_free(ptr_return_decompressed_data);
         return false;
-    }
+    }*/
 
     dictionary_free(&dictionary);
-    dicvaluearray_free(&result_data);
-    chararray_free(&s_value);
     return true;
 }
 
