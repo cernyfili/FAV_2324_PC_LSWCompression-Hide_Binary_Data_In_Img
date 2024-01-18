@@ -15,6 +15,7 @@
 #include "payload.h"
 #include "utils/utils.h"
 #include "image.h"
+#include "utils/dictionary.h"
 
 //region DEFINE, MACROS
 
@@ -39,11 +40,20 @@
 #define TUTORIAL_STR "You can use this program for hiding data in image or extract hidden data from image.\n"\
                      "Hiding: stegim.exe <image_to_hide_to_filepath> -h <hide_payload_filepath>\n"\
                      "Extraction: stegim.exe <input_image_to_extract_from_filepath> -x <output_payload_filepath>\n"
+/**
+ * Temporary filename
+ */
+#define TEMP_FILENAME "temp"
+
+/**
+ * Best LZW compression rate
+ */
+#define BEST_LZW_COMPRESSION_RATE 5.0
 //endregion
 
 //region FUNCTIONS DECLARATION
 
-#define TEMP_FILENAME "temp"
+#define ARRAY_INIT_SIZE 1000
 
 /**
  * Function to hide payload
@@ -76,11 +86,28 @@ static int extract_payload(const char *input_image_filepath, const char *output_
  */
 void cleanup();
 
+/**
+ * Print error message
+ * @param result is result of program
+ */
+static void print_error_message(int result);
+
+/**
+ * Check if payload fits into image
+ * @param image_filepath is path to input image
+ * @param payload_filepath is path to file with payload
+ * @return
+ * 0 succesfull
+ * 1 cannot open file
+ * 2 if input file is not BMP or PNG
+ * 3 if payload is too big for image
+ * 6 other error
+ */
+static int check_if_payload_fits(const char *image_filepath, const char *payload_filepath);
 
 //endregion
 
 //region FUNCTIONS DEFINITIONS
-void print_error_message(int result);
 
 /**
  * @brief main function
@@ -153,7 +180,11 @@ int main(int argc, char *argv[]) {
     exit(0);
 }
 
-void print_error_message(int result) {
+/**
+ * Print error message
+ * @param result is result of program
+ */
+static void print_error_message(int result) {
     switch (result) {
         case 1:
             printf("Files doesn't exist or cannot be open.\n");
@@ -178,6 +209,58 @@ void print_error_message(int result) {
             break;
     }
 
+}
+
+/**
+ * Check if payload fits into image
+ * @param image_filepath is path to input image
+ * @param payload_filepath is path to file with payload
+ * @return
+ * 0 succesfull
+ * 1 cannot open file
+ * 2 if input file is not BMP or PNG
+ * 3 if payload is too big for image
+ * 6 other error
+ */
+static int check_if_payload_fits(const char *image_filepath, const char *payload_filepath) {
+    //Check if the arguments are valid
+    if (!image_filepath || !payload_filepath) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return 6;
+    }
+    //Check if the input image file exists
+    if (!file_exists(image_filepath) || !file_exists(payload_filepath)) {
+        LOG_MESSAGE(ERROR, "Input image file does not exist.");
+        return 1;
+    }
+
+    bool is_success;
+    int result;
+
+    //Get the size of the payload
+    size_t payload_size_bytes;
+    is_success = get_file_size(payload_filepath, &payload_size_bytes);
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Unable to get the size of the payload.");
+        return 6;
+    }
+    size_t payload_size_bits = (size_t)(((double)payload_size_bytes * BITS_IN_BYTE)/BEST_LZW_COMPRESSION_RATE);
+
+    //Get the size of the image
+    size_t image_size;
+    result = get_image_pixelscount(image_filepath, &image_size);
+    if (result != 0) {
+        LOG_MESSAGE(ERROR, "Unable to get the size of the image.");
+        return result;
+    }
+
+    //Check if the payload fits into the image
+    if (payload_size_bits >= image_size) {
+        LOG_MESSAGE(ERROR, "The payload is too big for the image.");
+        return 3;
+    }
+
+    return 0;
 }
 
 /**
@@ -207,8 +290,15 @@ hide_payload(const char *input_image_filepath, const char *hide_payload_filepath
     struct cleanupcommand *cleanup_list = NULL;
     bool is_success;
     int result;
+    
+    result = check_if_payload_fits(input_image_filepath, hide_payload_filepath);
+    if (result != 0) {
+        LOG_MESSAGE(ERROR, "Unable to check if the payload fits into the image.");
+        return result;
+    }
 
     LOG_MESSAGE(INFO, "MAIN: Before prepare_payload_data");
+
     struct binarydataarray hide_data;
     is_success = prepare_payload_data(hide_payload_filepath, &hide_data);
     if (!is_success) {
@@ -217,11 +307,9 @@ hide_payload(const char *input_image_filepath, const char *hide_payload_filepath
         return 6;
     }
     CLEANUP_ADD_COMMAND(&cleanup_list, hide_data.array);
-    LOG_MESSAGE(INFO, "MAIN: After prepare_payload_data");
 
     char *temp_output_image_filepath = TEMP_FILENAME;
 
-    LOG_MESSAGE(INFO, "MAIN: Before hide_data_lsb");
     // Hide the payload into the image
     result = hide_data_lsb(input_image_filepath, hide_data, temp_output_image_filepath);
     //Check if the hiding was successful
@@ -230,7 +318,6 @@ hide_payload(const char *input_image_filepath, const char *hide_payload_filepath
         cleanup_run_commands(&cleanup_list);
         return result;
     }
-    LOG_MESSAGE(INFO, "MAIN: After hide_data_lsb");
 
     //Copy the temp file to the original file
     FILE *temp_file = fopen(temp_output_image_filepath, "rb");
@@ -262,7 +349,6 @@ hide_payload(const char *input_image_filepath, const char *hide_payload_filepath
     return 0;
 }
 
-
 /**
  * Function to extract payload
  * @param input_image_filepath is path to input image
@@ -292,34 +378,34 @@ static int extract_payload(const char *input_image_filepath, const char *output_
     struct binarydataarray hidden_data;
 
     //Prepare ptr_hidden_data
-    hidden_data.length = 0;
-    hidden_data.capacity = 1000;
-    hidden_data.array = TRACKED_MALLOC(sizeof(binarydata_type) * hidden_data.capacity);
-    if (!hidden_data.array) {
+    bool is_success = binarydataarray_initialize(&hidden_data);
+    if (!is_success) {
         LOG_MESSAGE(ERROR, "Failed to allocate memory for payload array.");
         return false;
     }
-    CLEANUP_ADD_COMMAND(&cleanup_list, hidden_data.array);
 
     result = extract_data_lsb(input_image_filepath, &hidden_data);
     //Check if the extraction was successful
     if (result != 0) {
         LOG_MESSAGE(ERROR, "Unable to extract the payload from the image.");
+        TRACKED_FREE(hidden_data.array);
         cleanup_run_commands(&cleanup_list);
         return result;
     }
 
 
-
-    char *payload_data;
-    result = extract_payload_from_data(hidden_data, &payload_data);
+    struct dicvaluearray payload_data;
+    payload_data.length = 0;
+    payload_data.capacity = 0;
+    payload_data.array = NULL;
+    result = extract_payload_from_data(&hidden_data, &payload_data);
     if (result != 0) {
         LOG_MESSAGE(ERROR, "Unable to get the payload from the array.");
         cleanup_run_commands(&cleanup_list);
         return result;
     }
-    CLEANUP_ADD_COMMAND(&cleanup_list, payload_data);
-    printf("main.c after extract_payload_from_data\n");
+
+    TRACKED_FREE(hidden_data.array);
 
 
     //save payload to file
@@ -327,24 +413,26 @@ static int extract_payload(const char *input_image_filepath, const char *output_
     if (!output_file) {
         LOG_MESSAGE(ERROR, "Unable to open or read file %s.", output_payload_filepath);
         cleanup_run_commands(&cleanup_list);
+        dicvaluearray_free(&payload_data);
         return 1;
     }
+
+
 
     // Write the payload to the file
-    size_t payload_data_size = strlen(payload_data);
-    size_t bytes_written = fwrite(payload_data, sizeof(char), payload_data_size, output_file);
-    if (bytes_written != payload_data_size * sizeof(char)) {
-        LOG_MESSAGE(ERROR, "Unable to write payload to file.");
+    size_t bytes_written = fwrite(payload_data.array, sizeof(char), payload_data.length, output_file);
+    if (bytes_written != payload_data.length * sizeof(char)) {
+        LOG_MESSAGE(ERROR, "Unable to write the payload to the file.");
         cleanup_run_commands(&cleanup_list);
+        dicvaluearray_free(&payload_data);
         fclose(output_file);
-        return 1;
+        return 6;
     }
-
 
 
     fclose(output_file);
+    dicvaluearray_free(&payload_data);
     cleanup_run_commands(&cleanup_list);
-
 
     return 0;
 }
@@ -358,5 +446,5 @@ void cleanup() {
     memory_management_destroy();
 }
 
-//endregion
+//endregion+
 

@@ -163,7 +163,7 @@ static void *tracked_malloc_static(struct allocation **allocation_list, size_t s
         new_info.line = line;
         new_info.is_deallocated = false;
 
-        if (*allocation_list == NULL) {
+        /*if (*allocation_list == NULL) {
             *allocation_list = malloc(sizeof(struct allocation));
             if (!(*allocation_list)) {
                 printf("MEMORY MANAGEMENT: Unable to allocate memory for allocation info.\n");
@@ -172,20 +172,22 @@ static void *tracked_malloc_static(struct allocation **allocation_list, size_t s
             (*allocation_list)->info = new_info;
             (*allocation_list)->next = NULL;
 
-        } else {
+        } else {*/
             // Add allocationinfo at the end of list
             struct allocation *current = *allocation_list;
             while (current->next != NULL) {
                 current = current->next;
             }
+
             current->next = malloc(sizeof(struct allocation));
             if (!current->next) {
                 printf("MEMORY MANAGEMENT: Unable to allocate memory for allocation info.\n");
                 return NULL;
             }
+
             current->next->info = new_info;
             current->next->next = NULL;
-        }
+        /*}*/
     }
 
     return ptr;
@@ -220,7 +222,6 @@ static void allocation_list_free(struct allocation **allocation_list) {
         free(current);
         current = next;
     } while (current != NULL);
-    *allocation_list = NULL;
 }
 
 /**
@@ -252,11 +253,12 @@ static void memory_management_report_static(struct allocation **allocation_list)
         return;
     }
 
-    while ((*allocation_list)->next != NULL) {
-        if ((*allocation_list)->info.is_deallocated == false) {
-            log_message(WARNING, (*allocation_list)->info.file, (*allocation_list)->info.line, "Memory leak detected");
+    struct allocation *current = *allocation_list;
+    while (current->next != NULL) {
+        if (current->info.is_deallocated == false) {
+            log_message(WARNING, current->info.file, current->info.line, "Memory leak detected");
         }
-        (*allocation_list) = (*allocation_list)->next;
+        current = current->next;
     }
 }
 
@@ -300,7 +302,20 @@ void memory_management_init() {
         return;
     }
 
-    allocations_head = NULL;
+    struct allocation ** allocation_list = get_allocations_head();
+    (*allocation_list) = malloc(sizeof(struct allocation));
+    if (!(*allocation_list)) {
+        printf("MEMORY MANAGEMENT: Unable to allocate memory for allocation info.\n");
+        return;
+    }
+    (*allocation_list)->next = NULL;
+    (*allocation_list)->info = (struct allocationinfo) {
+            .is_deallocated = true,
+            .file = NULL,
+            .pointer = NULL,
+            .size = 0,
+            .line = 0
+    };
     is_initialized = true;
 }
 
@@ -314,7 +329,7 @@ void memory_management_destroy() {
         return;
     }
 
-    allocation_list_free(&allocations_head);
+    allocation_list_free(get_allocations_head());
     is_initialized = false;
 }
 

@@ -66,6 +66,27 @@ bool file_exists(const char *filename) {
     struct stat buffer;
     return (stat(filename, &buffer) == 0);
 }
+
+/**
+ * Get file size
+ * @param filepath  is path to file
+ * @param ptr_return_size  is pointer to return size
+ * @return  true if file size was successfully returned, false otherwise
+ */
+bool get_file_size(const char *filepath, size_t * ptr_return_size){
+    if(!filepath || !ptr_return_size){
+        LOG_MESSAGE(ERROR, "Wrong argument");
+        return false;
+    }
+    struct stat st;
+    int result = stat(filepath, &st);
+    if(result != 0){
+        LOG_MESSAGE(ERROR, "Cannot get file size");
+        return false;
+    }
+    *ptr_return_size = st.st_size;
+    return true;
+}
 //endregion
 
 //endregion

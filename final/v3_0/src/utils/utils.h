@@ -65,4 +65,12 @@ bool copy_files(FILE *input_file, FILE *output_file);
  */
 bool file_exists(const char *filename);
 
+/**
+ * Get file size
+ * @param filepath is path to file
+ * @param ptr_return_size is pointer to return size
+ * @return true if file size was successful, false otherwise
+ */
+bool get_file_size(const char *filepath, size_t * ptr_return_size);
+
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_UTILS_H

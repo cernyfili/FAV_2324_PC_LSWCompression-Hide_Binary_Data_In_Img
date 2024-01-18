@@ -15,20 +15,7 @@
 #include <stdbool.h>
 #include <zlib.h>
 
-/**
- * Signature of the payload data
- */
-#define SIGNATURE "KIVPCSP_HiddenData"
 
-/**
- * Signature len of the payload data
- */
-#define SIGNATURE_SIZE strlen(SIGNATURE)
-
-/**
- * Size of the payload size in bytes
- */
-#define PAYLOADSIZE_SIZE sizeof(payloadsize_type)
 
 /**
  * Max value of the payload size
@@ -51,10 +38,6 @@
  */
 typedef uint32_t crc32_type;
 
-/**
- * Represents the type for payloadsize data
- */
-typedef uint32_t payloadsize_type;
 //endregion
 
 
@@ -88,26 +71,58 @@ static bool compute_crc32(struct binarydataarray data, crc32_type *ptr_return_re
  * Function copies payload size from payload array to ptr_return_size
  * @param array  payload array
  * @param ptr_return_size  pointer to size_t where the payload size will be copied
- * @return  true if succesfull, false otherwise
+ * @return
+ * 0 success
+ * 4 there is no signature
+ * 6 other error
  */
-bool payload_get_payloadsize(struct binarydataarray array, size_t *ptr_return_size) {
-    if (!array.array || !ptr_return_size) {
+int payload_get_payloadsize(struct binarydataarray *array, size_t *ptr_return_size) {
+    if (!array->array || !ptr_return_size) {
         LOG_MESSAGE(ERROR, "Invalid arguments.");
-        return false;
+        return 6;
     }
     //Prepare ptr_return
-    *ptr_return_size = 0;
+    payloadsize_type payloadsize = 0;
 
-    size_t size = PAYLOAD_SIZE_OFFSET;
+    size_t payloadsize_size = PAYLOADSIZE_SIZE;
+    size_t signature_size_bytes = SIGNATURE_SIZE;
 
-    if (array.length < size) {
+    size_t size = payloadsize_size + signature_size_bytes;
+
+    void * start = (void *) array->array;
+
+    if (array->length < size) {
         LOG_MESSAGE(ERROR, "Payload is too small.");
-        return false;
+        return 6;
+    }
+    memcpy(&payloadsize, start, payloadsize_size);
+
+    //check if signature correct
+    char *original_signature = SIGNATURE;
+
+    //READ signature
+    char *signature = TRACKED_MALLOC(STR_ADD_ONE(signature_size_bytes));
+    if (!signature) {
+        LOG_MESSAGE(ERROR, "Memory allocation failed.");
+        return 6;
+    }
+    memcpy(signature, start + payloadsize_size, signature_size_bytes);
+
+    //add null terminator
+    char null_terminator = STRING_NULL_TERMINATOR;
+    memcpy(signature + signature_size_bytes, &null_terminator, sizeof(char));
+
+    //compare signatures
+    if (strcmp(signature, original_signature) != 0) {
+        LOG_MESSAGE(ERROR, "There is no signature.");
+        TRACKED_FREE(signature);
+        return 4;
     }
 
-    memcpy(ptr_return_size, array.array, PAYLOAD_SIZE_OFFSET);
+    TRACKED_FREE(signature);
+    (*ptr_return_size) = payloadsize;
 
-    return true;
+    return 0;
 }
 
 /**
@@ -243,9 +258,9 @@ bool prepare_payload_data(const char *filename, struct binarydataarray *ptr_retu
  * 5 file was corupted, crc32 doesnt match, cannot decompress
  * 6 other error
  */
-int extract_payload_from_data(struct binarydataarray hidden_data, char **ptr_return_payload) {
+int extract_payload_from_data(struct binarydataarray *hidden_data, struct dicvaluearray *ptr_return_payload) {
     //SANITY CHECK
-    if (!hidden_data.array || !ptr_return_payload) {
+    if (!hidden_data->array || !ptr_return_payload) {
         LOG_MESSAGE(ERROR, "Wrong arguments.");
         return 6;
     }
@@ -253,7 +268,7 @@ int extract_payload_from_data(struct binarydataarray hidden_data, char **ptr_ret
     struct cleanupcommand *cleanup_list = NULL;
     bool is_success;
 
-    void * start = (void *) hidden_data.array;
+    void * start = (void *) hidden_data->array;
     size_t offset = 0;
 
     //READ size
@@ -261,10 +276,11 @@ int extract_payload_from_data(struct binarydataarray hidden_data, char **ptr_ret
     size_t payloadsize_size = PAYLOADSIZE_SIZE;
     memcpy(&payloadsize_value, start + offset, payloadsize_size);
     offset += payloadsize_size;
-    if (payloadsize_value != hidden_data.length * sizeof(binarydata_type)){
+    if (payloadsize_value != hidden_data->length * sizeof(binarydata_type)){
         LOG_MESSAGE(ERROR, "Payload size is not correct.");
         return 6;
     }
+
 
     //check if signature correct
     char *original_signature = SIGNATURE;
@@ -297,7 +313,6 @@ int extract_payload_from_data(struct binarydataarray hidden_data, char **ptr_ret
     memcpy(&loaded_crc32, start + offset, crc32_size);
     offset += crc32_size;
 
-
     //READ payload_data
     struct binarydataarray payload_data;
     payload_data.capacity = payloadsize_value - (payloadsize_size + signature_size_bytes + crc32_size);
@@ -310,6 +325,7 @@ int extract_payload_from_data(struct binarydataarray hidden_data, char **ptr_ret
     }
     CLEANUP_ADD_COMMAND(&cleanup_list, payload_data.array);
     memcpy(payload_data.array, start + offset, payload_data.length * sizeof(binarydata_type));
+
 
     //check crc32
     crc32_type computed_crc32;
@@ -333,7 +349,6 @@ int extract_payload_from_data(struct binarydataarray hidden_data, char **ptr_ret
         cleanup_run_commands(&cleanup_list);
         return 5;
     }
-    printf("Payload.c after decompress\n");
 
     cleanup_run_commands(&cleanup_list);
 

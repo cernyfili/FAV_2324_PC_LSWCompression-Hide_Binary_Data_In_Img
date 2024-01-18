@@ -31,9 +31,10 @@ typedef unsigned char *dic_value_type;
  * Represents an array of dictionary values.
  */
 struct dicvaluearray {
-    dic_value_type *array;
+    char* array;
     size_t length;
     size_t capacity;
+    size_t char_count;
 };
 
 /**
@@ -58,15 +59,6 @@ struct dictionary {
     size_t length;          // Current number of entries in the dictionary
     size_t capacity;        // Maximum capacity of the dictionary
 };
-
-/**
- * Represents an array of chars.
- */
- struct chararray {
-     char *array;     /**< Pointer to the char array. */
-     size_t length;   /**< Current number of chars in the array. */
-     size_t capacity; /**< Maximum number of chars the array can hold. */
- };
 
 //endregion
 
@@ -141,24 +133,6 @@ bool dicvaluearray_add_element(struct dicvaluearray *dic_value_array, dic_value_
 void dicvaluearray_free(struct dicvaluearray *dic_value_array);
 
 /**
- * This function takes a struct dicvaluearray and converts it into a single string,
- * allocating memory for the resulting string and updating the pointer accordingly.
- *
- * @param array The struct dicvaluearray to be converted to a string.
- * @param ptr_return_str Pointer to the char pointer to store the resulting string.
- * @return true if conversion is successful, false otherwise.
- */
-bool dicvaluearray_to_string(struct dicvaluearray array, char **ptr_return_str);
-
-/**
- *  This function takes a struct dicvaluearray and copies it to a new struct dicvaluearray,
- * @param original_array  The struct dicvaluearray to be copied.
- * @param ptr_return_copy_array  Pointer to the struct dicvaluearray to store the copied array.
- * @return  true if copy is successful, false otherwise.
- */
-bool dicvaluearray_copy(struct dicvaluearray original_array, struct dicvaluearray *ptr_return_copy_array);
-
-/**
  * Checks if a specified dictionary value is invalid (NULL).
  *
  * @param value struct dictionary value to be checked.
@@ -184,57 +158,6 @@ bool diccodearray_add_element(struct staticdiccodearray *dic_value_array, dic_co
  * @return  true if copy is successful, false otherwise.
  */
 bool diccodearray_copy(struct staticdiccodearray original_array, struct staticdiccodearray *copy_array);
-//endregion
-
-//region CHARARRAY FUNCTIONS
-/**
- * Adds an element to a char array.
- *
- * @param char_array Pointer to the char array.
- * @param element Element to be added.
- * @return true if the addition is successful, false otherwise.
- */
-bool chararray_add_element(struct chararray *char_array, char element);
-
-/**
- * Frees the memory occupied by a char array, including its internal array.
- *
- * @param char_array Pointer to the char array to be freed.
- */
-void chararray_free(struct chararray *char_array);
-
-/**
- * Initializes the char array by allocating memory for its internal structures.
- *
- * @param char_array Pointer to the char array to be initialized.
- * @return true if initialization is successful, false otherwise.
- */
-bool chararray_init(struct chararray *char_array);
-
-/**
- * This function adds a string to a struct chararray.
- * @param char_array  The struct chararray to which the string is added.
- * @param string  The string to be added.
- * @return  true if the addition is successful, false otherwise.
- */
-bool chararray_set_string(struct chararray *char_array, char *string);
-
-/**
- * This function adds a string and char to a struct chararray.
- * @param char_array  The struct chararray to which the string is added.
- * @param string  The string to be added.
- * @param c  The char to be added.
- * @return  true if the addition is successful, false otherwise.
- */
-bool chararray_set_string_char(struct chararray *char_array, char *string, char c);
-
-/**
- * This function adds a char after null terminator to a struct chararray.
- * @param char_array  The struct chararray to which the char is added.
- * @param c  The char to be added.
- * @return  true if the addition is successful, false otherwise.
- */
-bool chararray_add_char(struct chararray *char_array, char c);
 //endregion
 
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_DICTIONARY_H

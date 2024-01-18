@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "utils/binary_data.h"
+#include "utils/dictionary.h"
 
 
 /**
@@ -32,7 +33,7 @@ bool compress_payload(struct binarydataarray data, struct binarydataarray *ptr_r
  * @param ptr_return_uncompressed_data  The pointer to the uncompressed data
  * @return  True if the decompression was successful, false otherwise
  */
-bool decompress_payload(struct binarydataarray compressed_data, char **ptr_return_uncompressed_data);
+bool decompress_payload(struct binarydataarray compressed_data, struct dicvaluearray *ptr_return_uncompressed_data);
 
 
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_COMPRESSION_H

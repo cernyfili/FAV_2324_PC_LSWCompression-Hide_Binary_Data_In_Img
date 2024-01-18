@@ -62,6 +62,8 @@ CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o: \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /mnt/g/Můj\ disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/binary_data.h \
  /mnt/g/Můj\ disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/payload.h \
+ /mnt/g/Můj\ disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/dictionary.h \
+ /mnt/g/Můj\ disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/src/utils/utils.h \
  /usr/include/png.h /usr/include/pnglibconf.h /usr/include/pngconf.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \

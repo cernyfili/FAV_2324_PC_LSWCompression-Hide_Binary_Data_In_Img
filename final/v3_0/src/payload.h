@@ -12,11 +12,31 @@
 #include <string.h>
 #include <stdbool.h>
 #include "utils/binary_data.h"
+#include "utils/dictionary.h"
 
 /**
  * BMP payloadsize offset in bytes
  */
-#define PAYLOAD_SIZE_OFFSET 4
+#define PAYLOAD_CHECK_OFFSET (PAYLOADSIZE_SIZE + SIGNATURE_SIZE + 1)
+
+/**
+ * Represents the type for payloadsize data
+ */
+typedef uint32_t payloadsize_type;
+/**
+ * Signature of the payload data
+ */
+#define SIGNATURE "KIVPCSP_HiddenData"
+
+/**
+ * Signature len of the payload data
+ */
+#define SIGNATURE_SIZE strlen(SIGNATURE)
+
+/**
+ * Size of the payload size in bytes
+ */
+#define PAYLOADSIZE_SIZE sizeof(payloadsize_type)
 
 /**
  * Function to prepare payload data it compresses the data and calculates the CRC32
@@ -39,13 +59,13 @@ bool prepare_payload_data(const char *filename, struct binarydataarray *ptr_retu
  * 5 file was corupted, crc32 doesnt match, cannot decompress
  * 6 other error
  */
-int extract_payload_from_data(struct binarydataarray hidden_data, char **ptr_return_payload);
+int extract_payload_from_data(struct binarydataarray *hidden_data, struct dicvaluearray *ptr_return_payload);
 
 /**
  * Checks if the input file is a BMP file.
  * @param input_file  The input file.
  * @return true if the input file is a BMP file, false otherwise.
  */
-bool payload_get_payloadsize(struct binarydataarray array, size_t *ptr_return_size);
+int payload_get_payloadsize(struct binarydataarray *array, size_t *ptr_return_size);
 
 #endif //FAV_PC_SP_23_24_BINARYDATAINIMG_PAYLOAD_H

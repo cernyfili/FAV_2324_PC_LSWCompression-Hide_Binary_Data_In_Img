@@ -18,7 +18,7 @@
 /**
  * LZW compression rate
  */
-#define LZW_COMPRESSION_RATE 0.6
+#define LZW_COMPRESSION_RATE 0.5
 //endregion
 
 
@@ -129,7 +129,7 @@ bool compress_payload(const struct binarydataarray data, struct binarydataarray 
  * @param ptr_return_uncompressed_data Pointer to the dynamically allocated string for the decompressed data.
  * @return true if decompression is successful, false otherwise.
  */
-bool decompress_payload(const struct binarydataarray compressed_data, char **ptr_return_uncompressed_data) {
+bool decompress_payload(const struct binarydataarray compressed_data, struct dicvaluearray *ptr_return_uncompressed_data) {
     //Check if data is not null
     if (!compressed_data.array || !ptr_return_uncompressed_data) {
         LOG_MESSAGE(ERROR, "Arguments are not valid");
@@ -144,6 +144,7 @@ bool decompress_payload(const struct binarydataarray compressed_data, char **ptr
     lzw_compressed_data.capacity = (size_t) ((double) compressed_data.length * ratio);
     lzw_compressed_data.length = lzw_compressed_data.capacity;
     lzw_compressed_data.array = TRACKED_MALLOC(lzw_compressed_data.capacity * sizeof(dic_code_type));
+
     if (!lzw_compressed_data.array) {
         LOG_MESSAGE(ERROR, "Memory allocation failed.");
         cleanup_run_commands(&cleanup_list);
@@ -154,27 +155,14 @@ bool decompress_payload(const struct binarydataarray compressed_data, char **ptr
     memcpy(lzw_compressed_data.array, compressed_data.array, lzw_compressed_data.length * sizeof(dic_code_type));
 
     // Call lzw_decompress function
-    struct dicvaluearray lzw_decompressed_data;
-    bool is_success = lzw_decompress(lzw_compressed_data, &lzw_decompressed_data);
+
+    bool is_success = lzw_decompress(lzw_compressed_data, ptr_return_uncompressed_data);
     if (!is_success) {
         LOG_MESSAGE(ERROR, "Unable to decompress payload data.");
         cleanup_run_commands(&cleanup_list);
-        dicvaluearray_free(&lzw_decompressed_data);
         return false;
     }
-
-    //Convert struct dicvaluearray to one string
-    is_success = dicvaluearray_to_string(lzw_decompressed_data, ptr_return_uncompressed_data);
-    if (!is_success) {
-        LOG_MESSAGE(ERROR, "Unable to convert DicValueArray to string.");
-        cleanup_run_commands(&cleanup_list);
-        dicvaluearray_free(&lzw_decompressed_data);
-        return false;
-    }
-
     cleanup_run_commands(&cleanup_list);
-    dicvaluearray_free(&lzw_decompressed_data);
-
 
     // Return the result of decompression
     return true;
@@ -267,7 +255,6 @@ static bool lzw_compress(const char *data, struct staticdiccodearray *ptr_return
         if (i > data_size) {
             LOG_MESSAGE(ERROR, "lzw_compress: i > data_size");
         }
-        /*LOG_MESSAGE(INFO, "lzw_compress: Processing character %zu from %zu", i, data_size);*/
 
         //region LZW C_NEXT_CHAR = next input character
         char c_next_char = data[i];
@@ -367,6 +354,7 @@ lzw_decompress(const struct staticdiccodearray compressed_data, struct dicvaluea
     size_t result_capacity_estimate = (size_t) ((double) compressed_data.length / LZW_COMPRESSION_RATE);
 
     (*ptr_return_decompressed_data).capacity = result_capacity_estimate;
+    (*ptr_return_decompressed_data).char_count = 0;
     (*ptr_return_decompressed_data).length = 0;
     (*ptr_return_decompressed_data).array = TRACKED_MALLOC((*ptr_return_decompressed_data).capacity * sizeof(dic_value_type));
     if (!(*ptr_return_decompressed_data).array) {
@@ -390,7 +378,8 @@ lzw_decompress(const struct staticdiccodearray compressed_data, struct dicvaluea
     //endregion
 
     //region LZW save to result translation of OLD
-    dic_value_type old_value = dictionary_get_value_to_code(dictionary, old_code);
+    dic_value_type old_value = dictionary_get_value_to_code(dictionary,old_code);
+    size_t old_value_len = strlen((char *) old_value);
     if (is_value_invalid(old_value)) {
         LOG_MESSAGE(ERROR, "Code not found in dictionary.");
         dictionary_free(&dictionary);
@@ -415,8 +404,6 @@ lzw_decompress(const struct staticdiccodearray compressed_data, struct dicvaluea
 
     //region LZW WHILE not end of input stream
     for (size_t i = 1; i < compressed_data.length; i++) {
-        /*LOG_MESSAGE(INFO, "lzw_decompress: Processing character %zu from %zu", i, compressed_data.length);*/
-        /*printf("%zu from %zu\n", i, compressed_data.length);*/
 
         dic_code_type new_code;
 
@@ -428,7 +415,7 @@ lzw_decompress(const struct staticdiccodearray compressed_data, struct dicvaluea
             dicvaluearray_free(ptr_return_decompressed_data);
             return false;
         }
-        size_t old_value_len = strlen((char *) old_value);
+        old_value_len = strlen((char *) old_value);
 
         //region LZW NEW = next input code
         new_code = compressed_data.array[i];
@@ -542,16 +529,6 @@ lzw_decompress(const struct staticdiccodearray compressed_data, struct dicvaluea
         //endregion
     }
     //endregion
-
-    //Copy result_data to ptr_return_decompressed_data
-    /*is_success = dicvaluearray_copy(result_data, ptr_return_decompressed_data);
-    if (!is_success) {
-        LOG_MESSAGE(ERROR, "Memory allocation failed.");
-        dicvaluearray_free(ptr_return_decompressed_data);
-        dictionary_free(&dictionary);
-        dicvaluearray_free(ptr_return_decompressed_data);
-        return false;
-    }*/
 
     dictionary_free(&dictionary);
     return true;

@@ -13,13 +13,13 @@
 /**
  * Represents whether the console logging is enabled.
  */
-#define IS_CONSOLE_LOG_ENABLED false
+#define IS_CONSOLE_LOG_ENABLED true
 
 /**
  * Array of log level info structs.
  */
 const struct loglevelinfo loglevelinfo_array[] = {
-        {INFO,    "INFO",    false},
+        {INFO,    "INFO",    true},
         {WARNING, "WARNING", true},
         {ERROR,   "ERROR",   true}
 };

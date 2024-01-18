@@ -10,7 +10,7 @@
 /**
  * Represents the initial size of the binarydata array.
  */
-#define INITIAL_BINARYDATAARRAY_SIZE 1000
+#define INITIAL_BINARYDATAARRAY_SIZE 50000
 /**
  * Represents the increment of the binarydata array size.
  */
@@ -101,8 +101,9 @@ static bool binarydataarray_add_element(struct binarydataarray *binarydata_array
         LOG_MESSAGE(ERROR, "Argument is NULL!");
         return false;
     }
+
     //if value doesnt fit
-    if (binarydata_array->length == binarydata_array->capacity) {
+    if (binarydata_array->length >= binarydata_array->capacity) {
         size_t new_capacity = binarydata_array->capacity + DIC_ARR_INC;
 
         void *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(binarydata_type));
@@ -185,12 +186,16 @@ bool binarydataarray_add_bit(struct binarydataarray *data, bool bit, size_t *arr
     }
 
     // Ensure valid array index
-    if (*array_index >= data->length) {
+    while (*array_index >= data->length) {
         // Need to add a new element to the dynamic array
         binarydata_type new_element = 0;
         is_success = binarydataarray_add_element(data, new_element);
         if (!is_success) {
             LOG_MESSAGE(ERROR, "Failed to add new element to binarydata array.");
+            return false;
+        }
+        if ((*element_bitshift) != 0){
+            LOG_MESSAGE(ERROR, "Element bit shift is not 0");
             return false;
         }
     }
@@ -204,7 +209,7 @@ bool binarydataarray_add_bit(struct binarydataarray *data, bool bit, size_t *arr
     }
 
     // Update array index and bit shift for the next iteration
-    if (*element_bitshift == last_bit_shift) {
+    if (*element_bitshift >= last_bit_shift) {
         // Move to the next element in the array
         (*array_index)++;
         *element_bitshift = 0;

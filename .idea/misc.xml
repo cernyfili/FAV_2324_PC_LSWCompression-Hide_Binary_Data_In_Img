@@ -8,5 +8,8 @@
     <libraryRoots>
       <file path="$PROJECT_DIR$/lib" />
     </libraryRoots>
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/final" />
+    </excludeRoots>
   </component>
 </project>

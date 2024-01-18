@@ -168,9 +168,6 @@ static bool get_last_bit(colorvalue_type value);
  */
 static bool read_bmp_metadata(FILE *input_file, struct bmpmetadata *ptr_return_bmpmetadata);
 
-
-
-
 /**
  * Frees the memory allocated by libpng.
  * @param png_read_ptr  The PNG read structure.
@@ -193,12 +190,96 @@ static void free_png_read_values(png_structp *png_read_ptr, png_infop *png_read_
 static void
 free_png_read_write_values(png_structp *png_read_ptr, png_infop *png_read_info_ptr, png_uint_32 row_pointers_size,
                            png_bytepp row_pointers, png_structp *png_write_ptr, png_infop *png_write_end_info_ptr);
+
+/**
+ * Returns the number of pixels in the image.
+ * @param filepath The path to the image file.
+ * @param ptr_pixelcount Pointer to the variable where the number of pixels will be stored.
+ * @return
+ * 0 succesfull
+ * 1 cannot open file
+ * 2 if input file is not BMP or PNG; not 24 bit RGB
+ * 6 other error
+ */
+static int get_image_pixelscount_bmp(const char *filepath, size_t *ptr_pixelcount);
+
+/**
+ * Returns the number of pixels in the image.
+ * @param filepath The path to the image file.
+ * @param ptr_pixelcount Pointer to the variable where the number of pixels will be stored.
+ * @return
+ * 0 succesfull
+ * 1 cannot open file
+ * 2 if input file is not BMP or PNG; not 24 bit RGB
+ * 6 other error
+ */
+static int get_image_pixelscount_png(const char *filepath, size_t *ptr_pixelcount);
 //endregion
 
 //region FUNCTIONS DEFINITIONS
 
 
 //region PUBLIC FUNCTIONS
+
+/**
+ * Returns the number of pixels in the image.
+ * @param image_filepath The path to the image file.
+ * @param ptr_return_pixelscount Pointer to the variable where the number of pixels will be stored.
+ * @return
+ * 0 succesfull
+ * 1 cannot open file
+ * 2 if input file is not BMP or PNG; not 24 bit RGB
+ * 6 other error
+ */
+int get_image_pixelscount(const char* image_filepath, size_t *ptr_return_pixelscount){
+    //Check if the arguments are valid
+    if (!image_filepath || !ptr_return_pixelscount) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return 6;
+    }
+
+    //Check if files exists
+    if (!file_exists(image_filepath)) {
+        LOG_MESSAGE(ERROR, "Input or output file does not exist.");
+        return 1;
+    }
+
+    // Check if the input file has .bmp or .png extension
+    char *extension = strrchr(image_filepath, '.');
+    if (!extension) {
+        LOG_MESSAGE(ERROR, "Input file has no extension.");
+        return 2;
+    }
+
+    // Check if the input file is a BMP file
+    if (strcmp(extension, ".bmp") == 0) {
+        int result = get_image_pixelscount_bmp(image_filepath, ptr_return_pixelscount);
+
+        //Check if the hiding process was successful
+        if (result != 0) {
+            LOG_MESSAGE(ERROR, "Error while getting pixel count.");
+            return result;
+        }
+
+    } else if (strcmp(extension, ".png") == 0) {
+        int result = get_image_pixelscount_png(image_filepath, ptr_return_pixelscount);
+
+        //Check if the hiding process was successful
+        if (result != 0) {
+            LOG_MESSAGE(ERROR, "Error while getting pixel count.");
+            return result;
+        }
+    } else {
+        LOG_MESSAGE(ERROR, "Input file is not a BMP or PNG file.");
+
+
+        return 2;
+    }
+
+    return 0;
+}
+
+
 /**
  * Checks if the input file is a PNG file.
  * @param input_filepath The input file.
@@ -278,6 +359,7 @@ int hide_data_lsb(const char *input_filepath, const struct binarydataarray hide_
  * 6 other error
  */
 int extract_data_lsb(const char *input_image_filepath, struct binarydataarray *ptr_return_hidden_data) {
+
     //Check if the arguments are valid
     if (!input_image_filepath || !ptr_return_hidden_data) {
         LOG_MESSAGE(ERROR, "Invalid arguments.");
@@ -305,6 +387,7 @@ int extract_data_lsb(const char *input_image_filepath, struct binarydataarray *p
         //Check if the extraction process was successful
         if (result != 0) {
             LOG_MESSAGE(ERROR, "Error while extracting the payload.");
+            TRACKED_FREE(ptr_return_hidden_data->array);
             return result;
         }
 
@@ -314,11 +397,13 @@ int extract_data_lsb(const char *input_image_filepath, struct binarydataarray *p
 
     // Check if the input file is a PNG file
     if (strcmp(extension, ".png") == 0) {
+
         result = extract_data_lsb_png(input_image_filepath, ptr_return_hidden_data);
 
         //Check if the extraction process was successful
         if (result != 0) {
             LOG_MESSAGE(ERROR, "Error while extracting the payload.");
+            TRACKED_FREE(ptr_return_hidden_data->array);
             return result;
         }
 
@@ -447,9 +532,10 @@ static int hide_data_lsb_png(const char *input_filepath, struct binarydataarray 
     //Check if payload fits to image
     png_uint_32 height = png_get_image_height(png_read_ptr, png_read_info_ptr);
     png_uint_32 width = png_get_image_width(png_read_ptr, png_read_info_ptr);
-    double pixel_count = width * (double) height;
+    double pixel_count = (double) width * (double) height;
     int bits_in_payload = (int) ((double) hide_data.length * BITS_IN_BYTE);
-    if (pixel_count < bits_in_payload) {
+
+    if (pixel_count <= bits_in_payload) {
         LOG_MESSAGE(ERROR, "Payload is too big for image.");
         png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
         png_destroy_write_struct(&png_write_ptr, &png_write_end_info_ptr);
@@ -769,7 +855,6 @@ static int extract_data_lsb_png(const char *input_image_filepath, struct binaryd
     if (!input_file) {
         // Unable to open file
         LOG_MESSAGE(ERROR, "Unable to open file.");
-        TRACKED_FREE(ptr_return_hidden_data->array);
         fclose(input_file);
         return 1;
     }
@@ -778,7 +863,6 @@ static int extract_data_lsb_png(const char *input_image_filepath, struct binaryd
     bool is_success = is_png_file(input_file);
     if (!is_success) {
         LOG_MESSAGE(ERROR, "Input file is not a PNG file.");
-        TRACKED_FREE(ptr_return_hidden_data->array);
         fclose(input_file);
         return 2;
     }
@@ -789,7 +873,6 @@ static int extract_data_lsb_png(const char *input_image_filepath, struct binaryd
 
     if (!png_read_ptr) {
         LOG_MESSAGE(ERROR, "Failed to create PNG read or write structure.");
-        TRACKED_FREE(ptr_return_hidden_data->array);
         fclose(input_file);
         return 6;
     }
@@ -800,7 +883,6 @@ static int extract_data_lsb_png(const char *input_image_filepath, struct binaryd
     if (!png_read_info_ptr) {
         LOG_MESSAGE(ERROR, "Failed to create PNG info structure.");
         png_destroy_read_struct(&png_read_ptr, NULL, NULL);
-        TRACKED_FREE(ptr_return_hidden_data->array);
         fclose(input_file);
         return 6;
     }
@@ -809,7 +891,6 @@ static int extract_data_lsb_png(const char *input_image_filepath, struct binaryd
     if (setjmp(png_jmpbuf(png_read_ptr))) {
         LOG_MESSAGE(ERROR, "Error occurred during PNG read or write operation.");
         png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
-        TRACKED_FREE(ptr_return_hidden_data->array);
         fclose(input_file);
         return 2;
     }
@@ -868,6 +949,7 @@ static int extract_data_lsb_png(const char *input_image_filepath, struct binaryd
 
         size_t row_bytes = png_get_rowbytes(png_read_ptr, png_read_info_ptr);
         for (int x = 0; x < row_bytes; x += 3) {
+
             //end when all payload data is hidden
             if (payload_array_index >= payload_size_bytes) {
                 break;
@@ -877,9 +959,11 @@ static int extract_data_lsb_png(const char *input_image_filepath, struct binaryd
             // Extract the LSB of the pixel value
             bool lsb_bit = get_last_bit(blue_value);
 
+
             // Write the LSB to the dynamic binary array
             is_success = binarydataarray_add_bit(ptr_return_hidden_data, lsb_bit, &payload_array_index,
                                                  &payload_element_bitshift);
+
             if (!is_success) {
                 LOG_MESSAGE(ERROR, "Cannot add bit to dynamic binary array.");
                 TRACKED_FREE(ptr_return_hidden_data->array);
@@ -889,22 +973,23 @@ static int extract_data_lsb_png(const char *input_image_filepath, struct binaryd
             }
 
             //READ payload size from file
-            if (ptr_return_hidden_data->length == PAYLOAD_SIZE_OFFSET) {
+            if (ptr_return_hidden_data->length == PAYLOAD_CHECK_OFFSET) {
 
-                is_success = payload_get_payloadsize(*ptr_return_hidden_data, &payload_size_bytes);
-                if (!is_success) {
+                int result = payload_get_payloadsize(ptr_return_hidden_data, &payload_size_bytes);
+                if (result != 0) {
                     LOG_MESSAGE(ERROR, "Cannot get payload size");
                     TRACKED_FREE(ptr_return_hidden_data->array);
-                    free_png_read_values(&png_read_ptr, &png_read_info_ptr, height, row_pointers);
                     fclose(input_file);
-                    return 6;
+                    return result;
                 }
             }
         }
     }
 
+
     free_png_read_values(&png_read_ptr, &png_read_info_ptr, height, row_pointers);
     fclose(input_file);
+
     return 0;
 }
 
@@ -1004,13 +1089,14 @@ static int extract_data_lsb_bmp(const char *input_image_filepath, struct binaryd
             }
 
             //READ payload size from file
-            if (ptr_return_hidden_data->length == PAYLOAD_SIZE_OFFSET) {
-                is_success = payload_get_payloadsize(*ptr_return_hidden_data, &payload_size_bytes);
-                if (!is_success) {
+            if (ptr_return_hidden_data->length == PAYLOAD_CHECK_OFFSET) {
+
+                int result = payload_get_payloadsize(ptr_return_hidden_data, &payload_size_bytes);
+                if (result != 0) {
                     LOG_MESSAGE(ERROR, "Cannot get payload size");
                     TRACKED_FREE(ptr_return_hidden_data->array);
                     fclose(input_file);
-                    return 6;
+                    return result;
                 }
             }
         }
@@ -1021,7 +1107,145 @@ static int extract_data_lsb_bmp(const char *input_image_filepath, struct binaryd
 }
 
 
+/**
+ * Returns the number of pixels in the image.
+ * @param filepath The path to the image file.
+ * @param ptr_pixelcount Pointer to the variable where the number of pixels will be stored.
+ * @return
+ * 0 succesfull
+ * 1 cannot open file
+ * 2 if input file is not BMP or PNG; not 24 bit RGB
+ * 6 other error
+ */
+static int get_image_pixelscount_png(const char *filepath, size_t *ptr_pixelcount) {
+    //Check if the arguments are valid
+    if (!filepath || !ptr_pixelcount) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return 6;
+    }
 
+    //Check if file exists
+    if (!file_exists(filepath)) {
+        LOG_MESSAGE(ERROR, "Input file does not exist.");
+        return 1;
+    }
+
+    FILE *input_file = fopen(filepath, "rb");
+
+    // Check if the file was opened successfully
+    if (!input_file) {
+        LOG_MESSAGE(ERROR, "Unable to open file.");
+        fclose(input_file);
+        return 1;
+    }
+
+    // Check if the input file is a PNG file
+    bool is_success = is_png_file(input_file);
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Input file is not a PNG file.");
+        fclose(input_file);
+        return 2;
+    }
+
+    // Create PNG read and write structures
+    png_structp png_read_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png_read_ptr) {
+        LOG_MESSAGE(ERROR, "Failed to create PNG read or write structure.");
+        fclose(input_file);
+        return 6;
+    }
+
+    // Create PNG info structures
+    png_infop png_read_info_ptr = png_create_info_struct(png_read_ptr);
+    if (!png_read_info_ptr) {
+        LOG_MESSAGE(ERROR, "Failed to create PNG info structure.");
+        png_destroy_read_struct(&png_read_ptr, NULL, NULL);
+        fclose(input_file);
+        return 6;
+    }
+
+    // Set up error handling
+    if (setjmp(png_jmpbuf(png_read_ptr))) {
+        LOG_MESSAGE(ERROR, "Error occurred during PNG read or write operation.");
+        png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
+        fclose(input_file);
+        return 2;
+    }
+
+    // Initialize PNG IO
+    png_init_io(png_read_ptr, input_file);
+
+    //set signature bytes
+    png_set_sig_bytes(png_read_ptr, PNG_SIGNATURE_SIZE);
+
+
+    // Read PNG header
+    png_read_info(png_read_ptr, png_read_info_ptr);
+
+    //Check if payload fits to image
+    png_uint_32 height = png_get_image_height(png_read_ptr, png_read_info_ptr);
+    png_uint_32 width = png_get_image_width(png_read_ptr, png_read_info_ptr);
+    (*ptr_pixelcount) = (size_t)((double) width * (double) height);
+
+    png_destroy_read_struct(&png_read_ptr, &png_read_info_ptr, NULL);
+    fclose(input_file);
+    return 0;
+}
+
+/**
+ * Returns the number of pixels in the image.
+ * @param filepath The path to the image file.
+ * @param ptr_pixelcount Pointer to the variable where the number of pixels will be stored.
+ * @return
+ * 0 succesfull
+ * 1 cannot open file
+ * 2 if input file is not BMP or PNG; not 24 bit RGB
+ * 6 other error
+ */
+static int get_image_pixelscount_bmp(const char *filepath, size_t *ptr_pixelcount) {
+    //Check if the arguments are valid
+    if (!filepath || !ptr_pixelcount) {
+        LOG_MESSAGE(ERROR, "Invalid arguments.");
+        return 6;
+    }
+
+    //Check if file exists
+    if (!file_exists(filepath)) {
+        LOG_MESSAGE(ERROR, "Input file does not exist.");
+        return 1;
+    }
+
+    FILE *input_file = fopen(filepath, "rb");
+
+    // Check if the file was opened successfully
+    if (!input_file) {
+        LOG_MESSAGE(ERROR, "Unable to open file.");
+        fclose(input_file);
+        return 1;
+    }
+
+    //read BMP metadata
+    struct bmpmetadata bmp_metadata;
+    bool is_success = read_bmp_metadata(input_file, &bmp_metadata);
+    if (!is_success) {
+        LOG_MESSAGE(ERROR, "Cannot read BMP metadata.");
+        fclose(input_file);
+        return 6;
+    }
+
+    // Check if the input file is a BMP file
+    if (bmp_metadata.signature != BMP_SIGNATURE) {
+        LOG_MESSAGE(ERROR, "Input file is not a BMP file.");
+        fclose(input_file);
+        return 2;
+    }
+
+    //Check if payload fits to image
+    *ptr_pixelcount = (size_t)(bmp_metadata.width * (double) bmp_metadata.height);
+    fclose(input_file);
+
+    return 0;
+}
 
 //region UTILS FUNCTIONS
 

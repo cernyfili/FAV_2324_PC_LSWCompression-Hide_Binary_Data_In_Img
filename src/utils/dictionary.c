@@ -24,7 +24,6 @@
  * Represents the increment of the dictionary size.
  */
 #define DIC_ARR_INC 50000
-
 /**
  * Represents the invalid value of the dictionary.
  */
@@ -200,7 +199,6 @@ bool dictionary_add_entry(struct dictionary *dictionary, dic_value_type entry) {
 
     //if value doesnt fit
     if (dictionary->length >= dictionary->capacity) {
-        /*printf("dictionary realloc\n");*/
         size_t new_capacity = dictionary->capacity + DIC_ARR_INC;
 
         dic_value_type *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(dic_value_type));
@@ -260,38 +258,33 @@ bool dicvaluearray_add_element(struct dicvaluearray *dic_value_array, dic_value_
         return false;
     }
 
+    size_t str_len = strlen((char *)element);
     // If array is full, increase capacity
-    if (dic_value_array->length >= dic_value_array->capacity) {
-        printf("reaaloc\n");
+    if ((dic_value_array->length + str_len) >= dic_value_array->capacity) {
         size_t new_capacity = dic_value_array->capacity + DIC_ARR_INC;
 
-        dic_value_type *temp_ptr = realloc(dic_value_array->array, new_capacity * sizeof(dic_value_type));
+        char *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(char));
         if (temp_ptr == NULL) {
             LOG_MESSAGE(ERROR, "Memory allocation failed.");
-            TRACKED_FREE(temp_ptr);
             dicvaluearray_free(dic_value_array);
-
             return false; // Memory allocation failed
         }
+        memcpy(temp_ptr, dic_value_array->array, dic_value_array->length * sizeof(char));
+        dicvaluearray_free(dic_value_array);
 
         dic_value_array->array = temp_ptr;
         dic_value_array->capacity = new_capacity;
         temp_ptr = NULL;
     }
 
-    size_t str_len = strlen((char *)element);
-    dic_value_array->array[dic_value_array->length] = TRACKED_MALLOC(str_len * sizeof(char));
-    if (!dic_value_array->array[dic_value_array->length]) {
-        LOG_MESSAGE(ERROR, "Memory allocation failed.");
-        dicvaluearray_free(dic_value_array);
-        return false;
-    }
-    memcpy(dic_value_array->array[dic_value_array->length], element, str_len & sizeof(char));/*
+
+    memcpy(dic_value_array->array + (dic_value_array->length * sizeof(char)), element, str_len * sizeof(char));
+    dic_value_array->char_count += str_len;
+    dic_value_array->length += str_len;
+    /*
 
     strcpy((char *) dic_value_array->array[dic_value_array->length], (char *) element);*/
 
-
-    (dic_value_array->length)++;
     return true;
 }
 
@@ -305,88 +298,7 @@ void dicvaluearray_free(struct dicvaluearray *dic_value_array) {
         return;
     }
 
-    for (size_t i = 0; i < dic_value_array->length; i++) {
-        TRACKED_FREE(dic_value_array->array[i]);
-    }
-
     TRACKED_FREE(dic_value_array->array);
-}
-
-
-/**
- * This function takes a struct dicvaluearray and converts it into a single string,
- * allocating memory for the resulting string and updating the pointer accordingly.
- *
- * @param array The struct dicvaluearray to be converted to a string.
- * @param ptr_return_str Pointer to the char pointer to store the resulting string.
- * @return true if conversion is successful, false otherwise.
- */
-bool dicvaluearray_to_string(struct dicvaluearray array, char **ptr_return_str) {
-    //Check if data is not null
-    if (!array.array || !ptr_return_str) {
-        LOG_MESSAGE(ERROR, "Arguments not valid.");
-        return false;
-    }
-
-    size_t final_str_len = 0;
-    for (int i = 0; i < array.length; i++) {
-        final_str_len += strlen((char *) array.array[i]);
-    }
-
-    *ptr_return_str = TRACKED_MALLOC(CALC_STR_MEM_SIZE(final_str_len));
-    if (!*ptr_return_str) {
-        LOG_MESSAGE(ERROR, "Memory allocation failed.");
-        return false;
-    }
-    strcpy(*ptr_return_str, (char *) array.array[0]);
-    for (int i = 1; i < array.length; i++) {
-        strcat(*ptr_return_str, (char *) array.array[i]);
-    }
-
-    return true;
-}
-
-/**
- * This function takes a struct dicvaluearray and copies it to a new struct dicvaluearray,
- * allocating memory for the resulting array and updating the pointer accordingly.
- *
- * @param original_array The struct dicvaluearray to be copied.
- * @param ptr_return_copy_array Pointer to the struct dicvaluearray to store the copied array.
- * @return true if copy is successful, false otherwise.
- */
-bool dicvaluearray_copy(struct dicvaluearray original_array, struct dicvaluearray *ptr_return_copy_array) {
-    //Check if data is not null
-    if (!original_array.array || !ptr_return_copy_array) {
-        LOG_MESSAGE(ERROR, "Wrong argument");
-        return false;
-    }
-
-    //Prepare ptr_return
-    ptr_return_copy_array->length = 0;
-    ptr_return_copy_array->capacity = 0;
-    ptr_return_copy_array->array = NULL;
-
-    (ptr_return_copy_array)->capacity = (original_array).length;
-    (ptr_return_copy_array)->array = TRACKED_MALLOC((ptr_return_copy_array)->capacity * sizeof(dic_value_type));
-    if (!(ptr_return_copy_array)->array) {
-        LOG_MESSAGE(ERROR, "Memory allocation failed.");
-        return false;
-    }
-    (ptr_return_copy_array)->length = (ptr_return_copy_array)->capacity;
-
-    //Copy contents of ( original_array) to ( copy_array)
-    for (int i = 0; i < (ptr_return_copy_array)->length; i++) {
-        dic_value_type value = (original_array).array[i];
-        (ptr_return_copy_array)->array[i] = TRACKED_MALLOC(CALC_STR_MEM_SIZE(strlen((char *) value)));
-        if (!(ptr_return_copy_array)->array[i]) {
-            LOG_MESSAGE(ERROR, "Memory allocation failed.");
-            dicvaluearray_free(ptr_return_copy_array);
-            return false;
-        }
-        memcpy((ptr_return_copy_array)->array[i], value, CALC_STR_MEM_SIZE(strlen((char *) value)));
-    }
-
-    return true;
 }
 //endregion
 
@@ -445,216 +357,6 @@ bool diccodearray_copy(struct staticdiccodearray original_array, struct staticdi
 }
 //endregion
 
-//region CHARARRAY FUNCTIONS
-/**
- * Adds an element to a char array.
- *
- * @param char_array Pointer to the char array.
- * @param element Element to be added.
- * @return true if the addition is successful, false otherwise.
- */
-bool chararray_add_element(struct chararray *char_array, char element) {
-    //Check if data is not null
-    if (!char_array || !char_array->array) {
-        LOG_MESSAGE(ERROR, "Wrong argument");
-        return false;
-    }
-
-    //if value doesnt fit
-    if (char_array->length >= char_array->capacity) {
-        printf("realloc\n");
-        size_t new_capacity = char_array->capacity + CHARARRAY_INIT_SIZE;
-
-        void *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(char));
-        if (temp_ptr == NULL) {
-            LOG_MESSAGE(ERROR, "Memory allocation failed.");
-            TRACKED_FREE(char_array->array);
-
-            return false; // Memory allocation failed
-        }
-        TRACKED_FREE(char_array->array);
-        char_array->array = temp_ptr;
-        char_array->capacity = new_capacity;
-        temp_ptr = NULL;
-    }
-
-    char_array->array[char_array->length] = element;
-    (char_array->length)++;
-
-    return true;
-}
-
-/**
- * Frees the memory occupied by a char array, including its internal array.
- *
- * @param char_array Pointer to the char array to be freed.
- */
-void chararray_free(struct chararray *char_array) {
-    if (!char_array->array) {
-        return;
-    }
-
-    TRACKED_FREE(char_array->array);
-}
-
-/**
- * This function adds a string to a struct chararray.
- * @param char_array  The struct chararray to which the string is added.
- * @param string  The string to be added.
- * @return  true if the addition is successful, false otherwise.
- */
-bool chararray_set_string(struct chararray *char_array, char *string) {
-    //Check if data is not null
-    if (!char_array || !string) {
-        LOG_MESSAGE(ERROR, "Wrong argument");
-        return false;
-    }
-
-    size_t string_len = strlen(string);
-    size_t length = STR_ADD_ONE(string_len);
-    if (length > char_array->capacity) {
-        printf("realloc\n");
-        size_t new_capacity = length + CHARARRAY_INIT_SIZE;
-
-        void *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(char));
-        if (temp_ptr == NULL) {
-            LOG_MESSAGE(ERROR, "Memory allocation failed.");
-            TRACKED_FREE(char_array->array);
-
-            return false; // Memory allocation failed
-        }
-        TRACKED_FREE(char_array->array);
-        char_array->array = temp_ptr;
-        char_array->capacity = new_capacity;
-        temp_ptr = NULL;
-    }
-
-    memcpy(char_array->array, string, CALC_STR_MEM_SIZE(string_len));
-    char_array->length = STR_ADD_ONE(string_len);
-
-    return true;
-}
-
-/**
- * This function adds a char after null terminator to a struct chararray.
- * @param char_array  The struct chararray to which the char is added.
- * @param c  The char to be added.
- * @return  true if the addition is successful, false otherwise.
- */
-bool chararray_add_char(struct chararray *char_array, char c){
-    //Check if data is not null
-    if (!char_array) {
-        LOG_MESSAGE(ERROR, "Wrong argument");
-        return false;
-    }
-
-    size_t length = char_array->length + sizeof(char);
-    if (length > char_array->capacity) {
-        printf("realloc\n");
-        size_t new_capacity = length + CHARARRAY_INIT_SIZE;
-
-        void *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(char));
-        if (temp_ptr == NULL) {
-            LOG_MESSAGE(ERROR, "Memory allocation failed.");
-            TRACKED_FREE(char_array->array);
-
-            return false; // Memory allocation failed
-        }
-        TRACKED_FREE(char_array->array);
-        char_array->array = temp_ptr;
-        char_array->capacity = new_capacity;
-        temp_ptr = NULL;
-    }
-
-    char_array->array[char_array->length - 1] = c;
-    char_array->array[char_array->length] = STRING_NULL_TERMINATOR;
-    char_array->length = length;
-
-    return true;
-
-}
-
-/**
- * This function adds a string and char to a struct chararray.
- * @param char_array  The struct chararray to which the string is added.
- * @param string  The string to be added.
- * @param c  The char to be added.
- * @return  true if the addition is successful, false otherwise.
- */
-bool chararray_set_string_char(struct chararray *char_array, char *string, char c){
-    //Check if data is not null
-    if (!char_array || !string) {
-        LOG_MESSAGE(ERROR, "Wrong argument");
-        return false;
-    }
-
-    size_t str_len = strlen(string);
-    size_t length = STR_ADD_ONE(str_len + sizeof(c));
-    if (length > char_array->capacity) {
-        printf("realloc\n");
-        size_t new_capacity = length + CHARARRAY_INIT_SIZE;
-
-        void *temp_ptr = TRACKED_MALLOC(new_capacity * sizeof(char));
-        if (temp_ptr == NULL) {
-            LOG_MESSAGE(ERROR, "Memory allocation failed.");
-            TRACKED_FREE(char_array->array);
-
-            return false; // Memory allocation failed
-        }
-        TRACKED_FREE(char_array->array);
-        char_array->array = temp_ptr;
-        char_array->capacity = new_capacity;
-        temp_ptr = NULL;
-    }
-
-    memcpy(char_array->array, string, str_len * sizeof(char));
-
-    char_array->length = str_len;
-
-    bool is_succes = chararray_add_element(char_array, c);
-    if (!is_succes) {
-        LOG_MESSAGE(ERROR, "Memory allocation failed.");
-        TRACKED_FREE(char_array->array);
-        return false;
-    }
-
-    is_succes = chararray_add_element(char_array, STRING_NULL_TERMINATOR);
-    if (!is_succes) {
-        LOG_MESSAGE(ERROR, "Memory allocation failed.");
-        TRACKED_FREE(char_array->array);
-        return false;
-    }
-
-    return true;
-}
-
-/**
- * Initializes the char array by allocating memory for its internal structures.
- *
- * @param char_array Pointer to the char array to be initialized.
- * @return true if initialization is successful, false otherwise.
- */
-bool chararray_init(struct chararray *char_array) {
-    //Check if data is not null
-    if (!char_array) {
-        LOG_MESSAGE(ERROR, "Wrong argument");
-        return false;
-    }
-
-    char_array->length = 0;
-    char_array->capacity = CHARARRAY_INIT_SIZE;
-    char_array->array = TRACKED_MALLOC(sizeof(char) * char_array->capacity);
-    if (!char_array->array) {
-        LOG_MESSAGE(ERROR, "Memory allocation failed.");
-        return false;
-    }
-
-    chararray_add_element(char_array, STRING_NULL_TERMINATOR);
-
-    return true;
-}
 //endregion
 
-//endregion
-
-//endregion
+//endregion+

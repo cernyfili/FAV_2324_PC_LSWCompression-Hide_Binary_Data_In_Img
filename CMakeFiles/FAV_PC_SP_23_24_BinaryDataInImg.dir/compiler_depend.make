@@ -66,11 +66,11 @@ CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/compression.c.o: src/compress
   /usr/include/stdint.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  src/utils/dictionary.h \
   src/utils/utils.h \
   src/utils/logger.h \
   src/utils/memory_management.h \
   src/utils/binary_data.h \
-  src/utils/dictionary.h \
   src/utils/utils.h \
   src/utils/trie.h
 
@@ -144,6 +144,8 @@ CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/image.c.o: src/image.c \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
   src/utils/binary_data.h \
   src/payload.h \
+  src/utils/dictionary.h \
+  src/utils/utils.h \
   /usr/include/png.h \
   /usr/include/pnglibconf.h \
   /usr/include/pngconf.h \
@@ -233,10 +235,12 @@ CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/main.c.o: src/main.c \
   /usr/include/stdint.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  src/utils/dictionary.h \
   src/utils/utils.h \
   src/utils/logger.h \
   src/utils/memory_management.h \
   src/utils/binary_data.h \
+  src/utils/utils.h \
   src/image.h
 
 CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload.c.o: src/payload.c \
@@ -304,10 +308,12 @@ CMakeFiles/FAV_PC_SP_23_24_BinaryDataInImg.dir/src/payload.c.o: src/payload.c \
   /usr/include/stdint.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  src/utils/dictionary.h \
   src/utils/utils.h \
   src/utils/logger.h \
   src/utils/memory_management.h \
   src/utils/binary_data.h \
+  src/utils/utils.h \
   src/compression.h \
   /usr/include/zlib.h \
   /usr/include/zconf.h \
