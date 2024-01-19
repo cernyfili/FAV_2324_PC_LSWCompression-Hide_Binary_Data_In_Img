@@ -1,0 +1,163 @@
+//
+// Author: Filip Cerny
+// Date: 01.01.2024
+// Description: This file contains dictionary functions.
+//
+
+#ifndef FAV_PC_SP_23_24_BINARYDATAINIMG_DICTIONARY_H
+#define FAV_PC_SP_23_24_BINARYDATAINIMG_DICTIONARY_H
+
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+
+#include "utils.h"
+
+
+
+//region STRUCTS
+#define DELETED_KEY -1
+
+#define MAX_VALUE_LENGTH 65536
+
+/**
+ * Represents the type of the dictionary value.
+ */
+typedef unsigned char *dic_value_type;
+
+/**
+ * Represents an array of dictionary values.
+ */
+struct dicvaluearray {
+    char* array;
+    size_t length;
+    size_t capacity;
+    size_t char_count;
+};
+
+/**
+ * Represents the type of the dictionary code.
+ */
+typedef uint16_t dic_code_type;
+
+/**
+ * Represents an array of static dictionary codes.
+ */
+struct staticdiccodearray {
+    dic_code_type *array;    // Array of static dictionary codes
+    size_t length;         // Current number of elements in the array
+    size_t capacity;       // Maximum capacity of the array
+};
+
+/**
+ *  Represents a dictionary for LZW compression.
+ */
+struct dictionary {
+    dic_value_type *array; // Array of dictionary entries
+    size_t length;          // Current number of entries in the dictionary
+    size_t capacity;        // Maximum capacity of the dictionary
+};
+
+//endregion
+
+//region DICTIONARY FUNCTIONS
+/**
+ * Prints the dictionary to the standard output.
+ *
+ * @param dictionary struct dictionary to be printed.
+ */
+void dictionary_print(struct dictionary dictionary);
+
+/**
+ * Initializes the dictionary by allocating memory for its internal structures.
+ * 
+ * @param dictionary Pointer to the dictionary to be initialized.
+ * @return true if initialization is successful, false otherwise.
+ */
+bool dictionary_init(struct dictionary *dictionary);
+
+/**
+ * Frees the memory occupied by a dictionary, including its internal arrays.
+ * 
+ * @param dictionary Pointer to the dictionary to be freed.
+ */
+void dictionary_free(struct dictionary *dictionary);
+
+/**
+ * Adds a dictionary entry to the dictionary.
+ * 
+ * @param dictionary Pointer to the dictionary.
+ * @param entry struct dictionary entry to be added.
+ * @return true if the addition is successful, false otherwise.
+ */
+bool dictionary_add_entry(struct dictionary *dictionary, dic_value_type entry);
+
+/**
+ * Checks if a specified code exists in the dictionary.
+ * 
+ * @param dictionary struct dictionary to be searched.
+ * @param code Code to be checked.
+ * @param ptr_return_is_in_dict Pointer to a boolean variable to store the result.
+ * @return true if the operation is successful, false otherwise.
+ */
+bool dictionary_is_code_in_dictionary(struct dictionary dictionary, dic_code_type code, bool *ptr_return_is_in_dict);
+
+/**
+ * Retrieves the dictionary value corresponding to a specified code.
+ * 
+ * @param dictionary Pointer to the dictionary.
+ * @param code Code for which the value is requested.
+ * @return struct dictionary value corresponding to the code.
+ */
+dic_value_type dictionary_get_value_to_code(struct dictionary dictionary, dic_code_type code);
+//endregion
+
+
+//region DICVALUEARRAY FUNCTIONS
+/**
+ * Adds an element to a dictionary value array.
+ * 
+ * @param dic_value_array Pointer to the dictionary value array.
+ * @param element Element to be added.
+ * @return true if the addition is successful, false otherwise.
+ */
+bool dicvaluearray_add_element(struct dicvaluearray *dic_value_array, dic_value_type element);
+
+/**
+ * Frees the memory occupied by a dictionary value array, including its internal array.
+ * 
+ * @param dic_value_array Pointer to the dictionary value array to be freed.
+ */
+void dicvaluearray_free(struct dicvaluearray *dic_value_array);
+
+/**
+ * Checks if a specified dictionary value is invalid (NULL).
+ *
+ * @param value struct dictionary value to be checked.
+ * @return true if the value is invalid, false otherwise.
+ */
+bool is_value_invalid(dic_value_type value);
+//endregion
+
+//region DICCODEARRAY FUNCTIONS
+/**
+ * Adds an element to a static dictionary code array.
+ * 
+ * @param dic_value_array Pointer to the static dictionary code array.
+ * @param element Element to be added.
+ * @return true if the addition is successful, false otherwise.
+ */
+bool diccodearray_add_element(struct staticdiccodearray *dic_value_array, dic_code_type element);
+
+/**
+ * Copies a static dictionary code array to a new static dictionary code array.
+ * @param original_array  The struct staticdiccodearray to be copied.
+ * @param copy_array  Pointer to the struct staticdiccodearray to store the copied array.
+ * @return  true if copy is successful, false otherwise.
+ */
+bool diccodearray_copy(struct staticdiccodearray original_array, struct staticdiccodearray *copy_array);
+//endregion
+
+#endif //FAV_PC_SP_23_24_BINARYDATAINIMG_DICTIONARY_H
