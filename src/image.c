@@ -1397,4 +1397,4 @@ static bool is_png_file(FILE *input_file) {
 //endregion
 //endregion
 
-//endregion+
+//endregion
