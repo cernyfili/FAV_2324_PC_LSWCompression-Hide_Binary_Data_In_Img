@@ -103,7 +103,3 @@ stegim.exe /home/user/images/img001.png -h /home/user/doc/secret.txt
 - Only **24-bit RGB** PNG/BMP images are supported.
 - Data is embedded sequentially from the **first pixel** onward (blue channel LSB).
 - Any modification of pixel data (recompression, filtering, edits) may corrupt the hidden payload; CRC32 is used to detect this.
-
-## License
-
-Add a license if you intend to publish/reuse this project beyond coursework.
