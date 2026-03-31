@@ -1,0 +1,42 @@
+# Makefile for FAV_PC_SP_23_24_BinaryDataInImg project on Windows with Visual C++
+
+# Compiler
+CC = cl
+
+# Compiler flags
+CFLAGS = /W3
+
+# Source files
+SRC = src\main.c \
+      src\compression.c \
+      src\image.c \
+      src\payload.c \
+      src\utils\logger.c \
+      src\utils\memory_management.c \
+      src\utils\data_structures.c \
+      src\utils\dictionary.c \
+      src\utils\utils.c
+
+# Object files
+OBJ = $(SRC:.c=.obj)
+
+# Header files
+INC = /I src /I src\utils
+
+# Target executable
+TARGET = FAV_PC_SP_23_24_BinaryDataInImg.exe
+
+# Libraries
+LIBS = /link /LIBPATH:C:\Program Files (x86)\GnuWin32\lib libpng.lib
+
+# Compilation rule
+$(TARGET): $(OBJ)
+    $(CC) $(CFLAGS) $(INC) /Fe$@ $^ $(LIBS)
+
+# Rule for compiling source files to object files
+.c.obj:
+    $(CC) $(CFLAGS) $(INC) /Fo$@ /c $<
+
+# Clean rule
+clean:
+    del /Q $(TARGET) $(OBJ)

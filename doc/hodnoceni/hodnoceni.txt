@@ -1,0 +1,5 @@
+Dokument: D102 -2, D303 -3, D401 -2, D408 -2, D402 -1, D403 -2, D407 -1.
+
+Program: P301 -3, P203 -6 (např. fce hide_data_lsb_bmp(), hide_data_lsb_png(), obecně dlouhé fce), P309 -2 (problematické použití sys/stat.h). Jinak je kód na profesionální úrovni.
+
+Malus: -50% za pozdní odevzdání práce. Celkem hodnoceno 46 body, po započtení malusu tedy získáno 23 bodů.

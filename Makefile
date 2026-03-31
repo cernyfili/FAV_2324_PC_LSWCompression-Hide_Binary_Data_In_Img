@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg"
+CMAKE_SOURCE_DIR = "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg"
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg"
+CMAKE_BINARY_DIR = "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg"
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/CMakeFiles" "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg//CMakeFiles/progress.marks"
+	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/CMakeFiles" "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg//CMakeFiles/progress.marks"
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/CMakeFiles" 0
+	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/CMakeFiles" 0
 .PHONY : all
 
 # The main clean target

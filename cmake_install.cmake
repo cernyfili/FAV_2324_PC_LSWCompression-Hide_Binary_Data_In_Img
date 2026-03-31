@@ -1,4 +1,4 @@
-# Install script for directory: /mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg
+# Install script for directory: /mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/_FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/mnt/g/Můj disk/0_MAIN/škola/FAV/3.rocnik_23_24/FAV_ZS_23_24/PC/semestralka/FAV_PC_SP_23_24_BinaryDataInImg/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
