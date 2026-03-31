@@ -3,6 +3,8 @@
 Semester project for **KIV/PC – Programming in ANSI C** (Digital steganography).  
 The program **hides a binary payload inside an image** (PNG or BMP) using **LSB steganography** (least-significant bit) and can later **extract** it back. To reduce the amount of data stored in the image, the payload is **compressed with LZW** and protected with a **CRC32 checksum**.
 
+Main documentation stored at [dokumentace.pdf](dokumentace.pdf)
+
 ## Features
 
 - Hide arbitrary binary data into an image (`-h`)
